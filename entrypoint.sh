@@ -58,10 +58,16 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
         warp-svc >/var/log/warp-svc.log 2>&1 &
         echo $! > /var/run/warp-svc.pid
         log "warp-svc launched (PID $!), waiting for control socket…"
+
+        # Accept the WARP Terms of Service (non-interactive, required before
+        # any warp-cli command will work in a headless container).
+        log "accepting WARP Terms of Service…"
+        warp-cli --accept-tos tos accept 2>/dev/null || true
+
         # Give the daemon up to 15 s to open its control socket
         SVC_READY=false
         for i in $(seq 1 30); do
-            if warp-cli status >/dev/null 2>&1; then
+            if warp-cli --accept-tos status >/dev/null 2>&1; then
                 SVC_READY=true
                 log "warp-svc is ready ✓ (after ${i}×0.5s)"
                 break
@@ -85,14 +91,14 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
     #  If a connector is already registered, tear it down first so the new
     #  token takes effect cleanly.
     log "registering connector…"
-    EXISTING=$(warp-cli connector show 2>/dev/null || true)
+    EXISTING=$(warp-cli --accept-tos connector show 2>/dev/null || true)
     if [ -n "$EXISTING" ]; then
         log "existing connector found — tearing down…"
-        warp-cli connector teardown 2>/dev/null || true
+        warp-cli --accept-tos connector teardown 2>/dev/null || true
         sleep 1
     fi
 
-    if warp-cli connector new "$WARP_TOKEN" 2>&1; then
+    if warp-cli --accept-tos connector new "$WARP_TOKEN" 2>&1; then
         log "connector registered ✓"
     else
         warn "connector new failed — trying to continue with existing registration"
@@ -102,7 +108,7 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
     log "connecting to Cloudflare mesh…"
     CONNECTED=false
     for attempt in 1 2 3; do
-        if warp-cli connect 2>&1; then
+        if warp-cli --accept-tos connect 2>&1; then
             log "connect command succeeded (attempt $attempt)"
             break
         else
@@ -113,7 +119,7 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
 
     # 2e. Wait until status is Connected (max ~30 s)
     for i in $(seq 1 30); do
-        STATUS="$(warp-cli status 2>/dev/null | head -1 || true)"
+        STATUS="$(warp-cli --accept-tos status 2>/dev/null | head -1 || true)"
         case "$STATUS" in
             *Connected*) log "WARP connected ✓  ($STATUS)"; CONNECTED=true; break ;;
         esac
@@ -121,7 +127,7 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
     done
     if [ "$CONNECTED" = false ]; then
         warn "WARP did not reach Connected state in 30 s — continuing anyway"
-        warn "last status: $(warp-cli status 2>/dev/null || echo 'unavailable')"
+        warn "last status: $(warp-cli --accept-tos status 2>/dev/null || echo 'unavailable')"
         warn "warp-svc log tail:"
         tail -5 /var/log/warp-svc.log 2>/dev/null | while read -r line; do warn "  $line"; done
     fi
