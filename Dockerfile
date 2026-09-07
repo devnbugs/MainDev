@@ -94,8 +94,12 @@ RUN echo "root ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
 # Cloudflare Tunnel runs in-image via the cloudflared binary.
 # Set TUNNEL_TOKEN at deploy time to start the tunnel.
 # If TUNNEL_TOKEN is empty, cloudflared is skipped — terminal works normally.
-
-VOLUME ["/tmp/teamdev_uploads", "/root/.bash_history_dir", "/root/.cloudflared"]
+#
+# NOTE: No VOLUME instruction — some platforms (Railway) reject it.
+#       Use platform-specific volume mounts instead:
+#       - Railway:  Railway Volumes (dashboard)
+#       - Fly.io:   fly.toml volumes
+#       - Docker:   docker-compose.yml volumes
 
 STOPSIGNAL SIGINT
 

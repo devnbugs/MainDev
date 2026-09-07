@@ -1141,8 +1141,15 @@
     }
 
     @keyframes modalpop {
-      from { opacity: 0; transform: scale(0.94) translateY(8px) }
-      to { opacity: 1; transform: scale(1) translateY(0) }
+      from {
+        opacity: 0;
+        transform: scale(0.94) translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0)
+      }
     }
 
     .modal-close {
@@ -1376,8 +1383,15 @@
     }
 
     @keyframes cmdpop {
-      from { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.97) }
-      to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) }
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-8px) scale(0.97)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1)
+      }
     }
 
     #cmd-palette.open {
@@ -1392,7 +1406,7 @@
       border-bottom: 1px solid var(--border)
     }
 
-    .cmd-input-wrap > span {
+    .cmd-input-wrap>span {
       color: var(--text3);
       font-size: 13px
     }
@@ -1490,12 +1504,13 @@
     <div class="pw-box">
       <div class="pw-label">ENTER PASSWORD TO CONTINUE</div>
       <div class="pw-input-wrap">
-        <input class="pw-input" type="password" id="pw-input" placeholder="Password…"
-          autocomplete="current-password" aria-label="Password input">
-        <span class="pw-eye" id="pw-eye" onclick="togglePwEye()" role="button"
-          aria-label="Toggle password visibility" tabindex="0">👁</span>
+        <input class="pw-input" type="password" id="pw-input" placeholder="Password…" autocomplete="current-password"
+          aria-label="Password input">
+        <span class="pw-eye" id="pw-eye" onclick="togglePwEye()" role="button" aria-label="Toggle password visibility"
+          tabindex="0">👁</span>
       </div>
-      <button class="pw-btn" onclick="checkPw()" aria-label="Submit password and enter terminal">ENTER TERMINAL →</button>
+      <button class="pw-btn" onclick="checkPw()" aria-label="Submit password and enter terminal">ENTER TERMINAL
+        →</button>
       <div class="pw-err" id="pw-err" role="alert" aria-live="polite"></div>
       <div class="pw-hint">Press Enter to submit · Ctrl+B toggles sidebar</div>
     </div>
@@ -1517,8 +1532,8 @@
       <div class="wbtns" role="group" aria-label="Window controls">
         <div class="wb red" title="Close" onclick="window.close()" role="button" aria-label="Close window"></div>
         <div class="wb amber" title="Minimize" role="button" aria-label="Minimize window"></div>
-        <div class="wb lime" title="Toggle sidebar" onclick="toggleSidebar()" role="button"
-          aria-label="Toggle sidebar"></div>
+        <div class="wb lime" title="Toggle sidebar" onclick="toggleSidebar()" role="button" aria-label="Toggle sidebar">
+        </div>
       </div>
       <button id="sb-toggle" class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar (Ctrl+B)"
         aria-label="Toggle sidebar" aria-keyshortcuts="Ctrl+B">
@@ -1566,8 +1581,8 @@
       <button class="tbtn orange" onclick="sendLine('railway status')" aria-label="Railway status">🚂 Railway</button>
       <button class="tbtn orange" onclick="sendLine('railway up')" aria-label="Railway deploy">🚀 Deploy</button>
       <div class="t-sep" role="separator"></div>
-      <button class="tbtn danger" onclick="sendCtrlC()" style="margin-left:auto"
-        aria-label="Send Ctrl+C interrupt">✕ Ctrl+C</button>
+      <button class="tbtn danger" onclick="sendCtrlC()" style="margin-left:auto" aria-label="Send Ctrl+C interrupt">✕
+        Ctrl+C</button>
     </nav>
 
     <div id="search-bar" role="search" aria-label="Terminal search">
@@ -1727,7 +1742,8 @@
   <div id="cmd-palette" role="dialog" aria-modal="false" aria-label="Command palette">
     <div class="cmd-input-wrap">
       <span aria-hidden="true">⌘</span>
-      <input id="cmd-input" placeholder="Type a command or search…" autocomplete="off" aria-label="Command palette input" />
+      <input id="cmd-input" placeholder="Type a command or search…" autocomplete="off"
+        aria-label="Command palette input" />
       <span class="cmd-kbadge">Esc</span>
     </div>
     <div id="cmd-list" role="listbox" aria-label="Available commands"></div>
