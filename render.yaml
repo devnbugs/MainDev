@@ -1,13 +1,16 @@
 services:
   - type: web
     name: teamdev-terminal
-    env: python
-    buildCommand: echo "no build"
-    startCommand: python3 terminal_server.py
+    env: docker
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10000
+      - key: TERMINAL_PASSWORD
+        sync: false
+      - key: MESH_NODE_TOKEN
+        sync: false
       - key: KEEPALIVE_URL
         fromService:
           type: web
