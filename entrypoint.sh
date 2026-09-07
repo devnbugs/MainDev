@@ -64,12 +64,16 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
         log "accepting WARP Terms of Service…"
         warp-cli --accept-tos tos accept 2>/dev/null || true
 
-        # Give the daemon up to 15 s to open its control socket
+        # Wait for the warp-svc Unix socket to appear (not warp-cli status,
+        # which returns non-zero until a connector is registered — a
+        # chicken-and-egg problem).  The socket is the reliable signal that
+        # the daemon is ready to accept IPC commands.
         SVC_READY=false
+        WARP_SOCK="/run/cloudflare-warp/warp_service"
         for i in $(seq 1 30); do
-            if warp-cli --accept-tos status >/dev/null 2>&1; then
+            if [ -S "$WARP_SOCK" ]; then
                 SVC_READY=true
-                log "warp-svc is ready ✓ (after ${i}×0.5s)"
+                log "warp-svc socket ready ✓ (after ${i}×0.5s)"
                 break
             fi
             # Check if the process died
@@ -81,27 +85,28 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
             sleep 0.5
         done
         if [ "$SVC_READY" = false ]; then
-            warn "warp-svc did not become ready in 15 s — WARP mesh will not work"
+            warn "warp-svc socket not ready in 15 s — WARP mesh may not work"
         fi
+        # Small grace period for the daemon to finish initialising
+        sleep 1
     else
         warn "warp-svc not found — cannot start WARP daemon"
     fi
 
     # 2c. Register the connector with the provided token
-    #  If a connector is already registered, tear it down first so the new
-    #  token takes effect cleanly.
+    #  This version of warp-cli only supports 'connector new' — there is no
+    #  'connector show' or 'connector teardown'.  An old registration must be
+    #  deleted first with 'registration delete', otherwise 'connector new'
+    #  fails with: "Old registration is still around."
     log "registering connector…"
-    EXISTING=$(warp-cli --accept-tos connector show 2>/dev/null || true)
-    if [ -n "$EXISTING" ]; then
-        log "existing connector found — tearing down…"
-        warp-cli --accept-tos connector teardown 2>/dev/null || true
-        sleep 1
-    fi
+    log "clearing any old registration…"
+    warp-cli --accept-tos registration delete 2>/dev/null || true
+    sleep 1
 
     if warp-cli --accept-tos connector new "$WARP_TOKEN" 2>&1; then
         log "connector registered ✓"
     else
-        warn "connector new failed — trying to continue with existing registration"
+        warn "connector new failed — trying to continue anyway"
     fi
 
     # 2d. Connect (with retries)
@@ -117,12 +122,14 @@ if [ -n "$WARP_TOKEN" ] && command -v warp-cli >/dev/null 2>&1; then
         fi
     done
 
-    # 2e. Wait until status is Connected (max ~30 s)
-    for i in $(seq 1 30); do
+    # 2e. Wait until status is Connected (max ~45 s)
+    for i in $(seq 1 45); do
         STATUS="$(warp-cli --accept-tos status 2>/dev/null | head -1 || true)"
         case "$STATUS" in
-            *Connected*) log "WARP connected ✓  ($STATUS)"; CONNECTED=true; break ;;
+            *Connected*|*Ready*) log "WARP connected ✓  ($STATUS)"; CONNECTED=true; break ;;
         esac
+        # Log progress every 10 s
+        [ $((i % 10)) = 0 ] && warn "still waiting… ($i s) status: ${STATUS:-unavailable}"
         sleep 1
     done
     if [ "$CONNECTED" = false ]; then
