@@ -1,0 +1,27 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "builds": [
+    {
+      "src": "terminal_server.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    { "src": "/health", "dest": "/terminal_server.py" },
+    { "src": "/manifest.json", "dest": "/terminal_server.py" },
+    { "src": "/upload", "dest": "/terminal_server.py", "methods": ["POST"] },
+    { "src": "/(.*)", "dest": "/terminal_server.py" }
+  ],
+  "env": {
+    "PORT": "7681",
+    "TERMINAL_PASSWORD": "R@b1u2004@",
+    "KEEPALIVE_URL": "",
+    "SHELL": "/bin/bash"
+  },
+  "functions": {
+    "terminal_server.py": {
+      "maxDuration": 300
+    }
+  }
+}

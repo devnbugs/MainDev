@@ -47,6 +47,7 @@
 | Heroku | `Procfile` + `app.json` + `runtime.txt` | Python buildpack, deploy button |
 | Gitpod | `.gitpod.yml` | Dev environment |
 | CodeSandbox | `sandbox.config.json` | Dev environment |
+| Vercel | `vercel.json` | Python serverless, 300 s max duration |
 
 ---
 
@@ -187,6 +188,7 @@ The Docker image ships with the Cloudflare WARP client pre-installed. When `WARP
 | Heroku / Procfile | `Procfile` + `app.json` + `runtime.txt` | `web: python3 terminal_server.py` |
 | Gitpod | `.gitpod.yml` | Dev environment |
 | CodeSandbox | `sandbox.config.json` | Dev environment |
+| Vercel | `vercel.json` | Python serverless, 300 s max duration |
 
 ---
 

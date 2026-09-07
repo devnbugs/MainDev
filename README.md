@@ -97,6 +97,7 @@ TeamDev-Terminal/
 ├── runtime.txt               # Heroku Python version pin
 ├── .gitpod.yml               # Gitpod dev environment
 ├── sandbox.config.json       # CodeSandbox dev environment
+├── vercel.json               # Vercel deployment config
 └── requirements.txt          # Empty — no pip dependencies
 ```
 
@@ -249,6 +250,7 @@ Leave `WARP_TOKEN` empty (the default) and the container starts the terminal nor
 | **Gitpod** | `.gitpod.yml` | ✅ | Dev environment |
 | **CodeSandbox** | `sandbox.config.json` | ✅ | Dev environment |
 | **Docker / Compose** | `Dockerfile` + `docker-compose.yml` | ✅ | Any Docker host |
+| **Vercel** | `vercel.json` | ✅ | Python serverless, 300 s max duration |
 
 ---
 
@@ -344,6 +346,30 @@ docker run -d -p 7681:7681 -e TERMINAL_PASSWORD="YourSecurePassword" teamdev-ter
 ```
 
 Works on any VPS, AWS ECS, GCP Cloud Run, Azure Container Apps, DigitalOcean App Platform, and more.
+
+---
+
+### Vercel
+
+1. Push your project to GitHub.
+2. Go to [vercel.com](https://vercel.com) → **New Project** → import your repo.
+3. Vercel auto-detects `vercel.json` and deploys `terminal_server.py` as a Python serverless function.
+4. Set `TERMINAL_PASSWORD` in Vercel's Environment Variables dashboard.
+
+```jsonc
+// vercel.json
+{
+  "builds": [{ "src": "terminal_server.py", "use": "@vercel/python" }],
+  "routes": [
+    { "src": "/(.*)", "dest": "/terminal_server.py" }
+  ],
+  "functions": {
+    "terminal_server.py": { "maxDuration": 300 }
+  }
+}
+```
+
+> ⚠️ **Vercel limitation:** Vercel is a serverless platform with a max function duration of 300 s (Pro plan). WebSocket connections and long-running PTY sessions may be interrupted. For persistent terminal sessions, use Railway, Render, Fly.io, or Docker instead. Vercel works best for the HTTP endpoints (`/health`, `/upload`, serving the UI).
 
 ---
 
