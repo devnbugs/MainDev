@@ -47,6 +47,13 @@
       --mono: 'JetBrains Mono', 'Share Tech Mono', monospace;
       --display: 'Orbitron', sans-serif;
       --radius: 6px;
+      --glass: rgba(19, 23, 32, 0.72);
+      --glass-border: rgba(42, 48, 80, 0.5);
+      --glass-blur: blur(12px) saturate(1.4);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.7);
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     *,
@@ -66,6 +73,25 @@
       color: var(--text);
       font-family: var(--mono);
       font-size: 13px
+    }
+
+    /* Modern scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border3)
     }
 
     body::after {
@@ -150,15 +176,17 @@
     }
 
     .pw-box {
-      background: var(--panel);
-      border: 1px solid var(--border2);
-      border-radius: 10px;
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
       padding: 28px 32px;
       width: min(380px, 90vw);
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 8px 40px rgba(0, 0, 0, .6)
+      box-shadow: var(--shadow-lg)
     }
 
     .pw-label {
@@ -328,10 +356,13 @@
       gap: 10px;
       height: 40px;
       padding: 0 14px;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border2);
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--glass-border);
       user-select: none;
-      z-index: 100
+      z-index: 100;
+      box-shadow: var(--shadow-sm)
     }
 
     .wbtns {
@@ -376,7 +407,7 @@
       width: 28px;
       height: 28px;
       cursor: pointer;
-      transition: all .15s;
+      transition: all var(--transition);
       flex-shrink: 0
     }
 
@@ -481,7 +512,8 @@
       border-bottom: 1px solid var(--border);
       overflow-x: auto;
       overflow-y: hidden;
-      scrollbar-width: thin
+      scrollbar-width: thin;
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.2)
     }
 
     #toolbar::-webkit-scrollbar {
@@ -500,7 +532,7 @@
       padding: 4px 9px;
       border-radius: 4px;
       cursor: pointer;
-      transition: all .15s;
+      transition: all var(--transition);
       white-space: nowrap;
       flex-shrink: 0
     }
@@ -560,13 +592,16 @@
       width: 195px;
       min-width: 195px;
       flex-shrink: 0;
-      background: var(--bg2);
-      border-right: 1px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-right: 1px solid var(--glass-border);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       transition: width .25s cubic-bezier(.4, 0, .2, 1), min-width .25s cubic-bezier(.4, 0, .2, 1);
-      position: relative
+      position: relative;
+      box-shadow: var(--shadow-sm)
     }
 
     #sidebar.collapsed {
@@ -621,8 +656,9 @@
       font-size: 10px;
       color: var(--text2);
       cursor: pointer;
-      transition: all .12s;
-      white-space: nowrap
+      transition: all var(--transition);
+      white-space: nowrap;
+      border-left: 2px solid transparent
     }
 
     .sb-item:hover {
@@ -632,7 +668,8 @@
 
     .sb-item.active {
       color: var(--green);
-      background: rgba(0, 255, 157, .05)
+      background: rgba(0, 255, 157, .05);
+      border-left-color: var(--green)
     }
 
     .sb-item-ico {
@@ -724,7 +761,7 @@
       white-space: nowrap;
       border-right: 1px solid var(--border);
       flex-shrink: 0;
-      transition: all .12s;
+      transition: all var(--transition);
       position: relative
     }
 
@@ -745,7 +782,8 @@
       left: 0;
       right: 0;
       height: 1.5px;
-      background: var(--green)
+      background: var(--green);
+      box-shadow: var(--glow-g)
     }
 
     .tab-x {
@@ -792,11 +830,14 @@
       height: 24px;
       display: flex;
       align-items: center;
-      background: var(--panel);
-      border-top: 1px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--glass-border);
       font-size: 9.5px;
       overflow: hidden;
-      position: relative
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.2)
     }
 
     .bb-seg {
@@ -895,15 +936,17 @@
       position: fixed;
       bottom: 44px;
       right: 16px;
-      background: var(--panel2);
-      border: 1px solid var(--border2);
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
       padding: 10px 16px;
       font-size: 11px;
       color: var(--text);
       z-index: 7000;
       display: none;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, .6);
+      box-shadow: var(--shadow-md);
       animation: slideup .2s ease
     }
 
@@ -1085,13 +1128,21 @@
     }
 
     .modal-box {
-      background: var(--panel);
-      border: 1px solid var(--border3);
-      border-radius: 10px;
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
       padding: 24px;
       width: min(400px, 92vw);
       position: relative;
-      box-shadow: 0 16px 60px rgba(0, 0, 0, .8)
+      box-shadow: var(--shadow-lg);
+      animation: modalpop .25s cubic-bezier(0.34, 1.56, 0.64, 1)
+    }
+
+    @keyframes modalpop {
+      from { opacity: 0; transform: scale(0.94) translateY(8px) }
+      to { opacity: 1; transform: scale(1) translateY(0) }
     }
 
     .modal-close {
@@ -1305,6 +1356,123 @@
       color: var(--red)
     }
 
+    /* Command palette */
+    #cmd-palette {
+      display: none;
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(520px, 92vw);
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 8000;
+      overflow: hidden;
+      animation: cmdpop .18s cubic-bezier(0.34, 1.56, 0.64, 1)
+    }
+
+    @keyframes cmdpop {
+      from { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.97) }
+      to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) }
+    }
+
+    #cmd-palette.open {
+      display: block
+    }
+
+    .cmd-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .cmd-input-wrap > span {
+      color: var(--text3);
+      font-size: 13px
+    }
+
+    #cmd-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text)
+    }
+
+    #cmd-input::placeholder {
+      color: var(--text3)
+    }
+
+    .cmd-kbadge {
+      font-size: 9px;
+      color: var(--text3);
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      padding: 1px 5px
+    }
+
+    #cmd-list {
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 6px
+    }
+
+    .cmd-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background var(--transition);
+      font-size: 12px;
+      color: var(--text2)
+    }
+
+    .cmd-item:hover,
+    .cmd-item.selected {
+      background: rgba(0, 255, 157, .07);
+      color: var(--green)
+    }
+
+    .cmd-item-ico {
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+      font-size: 13px
+    }
+
+    .cmd-item-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .cmd-item-kbd {
+      font-size: 9px;
+      color: var(--text3);
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      padding: 1px 5px;
+      flex-shrink: 0
+    }
+
+    .cmd-empty {
+      padding: 18px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 11px
+    }
+
     ::selection {
       background: rgba(0, 255, 157, .18);
       color: var(--green)
@@ -1314,7 +1482,7 @@
 
 <body>
 
-  <div id="pw-screen">
+  <div id="pw-screen" role="dialog" aria-modal="true" aria-label="Password authentication">
     <div class="pw-logo">
       <div class="pw-logo-badge">TD</div>
       TEAMDEV
@@ -1322,11 +1490,13 @@
     <div class="pw-box">
       <div class="pw-label">ENTER PASSWORD TO CONTINUE</div>
       <div class="pw-input-wrap">
-        <input class="pw-input" type="password" id="pw-input" placeholder="Password…" autocomplete="current-password">
-        <span class="pw-eye" id="pw-eye" onclick="togglePwEye()">👁</span>
+        <input class="pw-input" type="password" id="pw-input" placeholder="Password…"
+          autocomplete="current-password" aria-label="Password input">
+        <span class="pw-eye" id="pw-eye" onclick="togglePwEye()" role="button"
+          aria-label="Toggle password visibility" tabindex="0">👁</span>
       </div>
-      <button class="pw-btn" onclick="checkPw()">ENTER TERMINAL →</button>
-      <div class="pw-err" id="pw-err"></div>
+      <button class="pw-btn" onclick="checkPw()" aria-label="Submit password and enter terminal">ENTER TERMINAL →</button>
+      <div class="pw-err" id="pw-err" role="alert" aria-live="polite"></div>
       <div class="pw-hint">Press Enter to submit · Ctrl+B toggles sidebar</div>
     </div>
   </div>
@@ -1341,67 +1511,76 @@
     <span class="install-close" onclick="dismissInstall()">✕</span>
   </div>
 
-  <div id="app">
+  <div id="app" role="application" aria-label="TeamDev X Terminal">
 
-    <div id="titlebar">
-      <div class="wbtns">
-        <div class="wb red" title="Close" onclick="window.close()"></div>
-        <div class="wb amber" title="Minimize"></div>
-        <div class="wb lime" title="Toggle sidebar" onclick="toggleSidebar()"></div>
+    <header id="titlebar" role="banner">
+      <div class="wbtns" role="group" aria-label="Window controls">
+        <div class="wb red" title="Close" onclick="window.close()" role="button" aria-label="Close window"></div>
+        <div class="wb amber" title="Minimize" role="button" aria-label="Minimize window"></div>
+        <div class="wb lime" title="Toggle sidebar" onclick="toggleSidebar()" role="button"
+          aria-label="Toggle sidebar"></div>
       </div>
-      <button id="sb-toggle" class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar (Ctrl+B)">
+      <button id="sb-toggle" class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar (Ctrl+B)"
+        aria-label="Toggle sidebar" aria-keyshortcuts="Ctrl+B">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round">
+          stroke-linecap="round" aria-hidden="true">
           <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" />
           <line x1="5.5" y1="2.5" x2="5.5" y2="13.5" />
         </svg>
       </button>
       <div class="tb-logo">
-        <div class="logo-badge">TD</div>
+        <div class="logo-badge" aria-hidden="true">TD</div>
         TEAMDEV X TERMINAL
       </div>
       <div class="tb-sep"></div>
-      <div class="tb-pill" id="ws-pill">
-        <div class="tb-dot amber" id="ws-dot"></div>
+      <div class="tb-pill" id="ws-pill" role="status" aria-live="polite" aria-label="Connection status">
+        <div class="tb-dot amber" id="ws-dot" aria-hidden="true"></div>
         <span id="ws-label">Connecting…</span>
       </div>
-      <div class="tb-time" id="clock"></div>
-    </div>
+      <div class="tb-time" id="clock" aria-label="Current time"></div>
+    </header>
 
-    <div id="toolbar">
-      <button class="tbtn" onclick="openUpload()">⬆ Upload <span class="kbadge">Ctrl+U</span></button>
-      <button class="tbtn" onclick="clearTerm()">⊘ Clear <span class="kbadge">Ctrl+L</span></button>
-      <button class="tbtn" onclick="newTab()">＋ Tab <span class="kbadge">Ctrl+T</span></button>
-      <button class="tbtn" onclick="toggleSearch()">🔍 Find <span class="kbadge">Ctrl+F</span></button>
-      <div class="t-sep"></div>
-      <button class="tbtn" onclick="sendLine('ls -la --color=auto')">📁 ls</button>
-      <button class="tbtn" onclick="sendLine('pwd')">📍 pwd</button>
-      <button class="tbtn" onclick="sendLine('top -b -n1 | head -20')">⚙ top</button>
-      <button class="tbtn" onclick="sendLine('df -h')">df</button>
-      <button class="tbtn" onclick="sendLine('free -h')">mem</button>
-      <div class="t-sep"></div>
-      <button class="tbtn blue" onclick="sendLine('git status')">⎇ git</button>
-      <button class="tbtn blue" onclick="sendLine('git log --oneline -10')">📜 log</button>
-      <button class="tbtn blue" onclick="sendLine('git pull origin main')">⬇ pull</button>
-      <button class="tbtn blue" onclick="sendLine('git push origin main')">⬆ push</button>
-      <div class="t-sep"></div>
-      <button class="tbtn orange" onclick="sendLine('railway status')">🚂 Railway</button>
-      <button class="tbtn orange" onclick="sendLine('railway up')">🚀 Deploy</button>
-      <div class="t-sep"></div>
-      <button class="tbtn danger" onclick="sendCtrlC()" style="margin-left:auto">✕ Ctrl+C</button>
-    </div>
+    <nav id="toolbar" role="toolbar" aria-label="Quick commands">
+      <button class="tbtn" onclick="openUpload()" aria-label="Upload file (Ctrl+U)">⬆ Upload <span
+          class="kbadge">Ctrl+U</span></button>
+      <button class="tbtn" onclick="clearTerm()" aria-label="Clear terminal (Ctrl+L)">⊘ Clear <span
+          class="kbadge">Ctrl+L</span></button>
+      <button class="tbtn" onclick="newTab()" aria-label="New tab (Ctrl+T)">＋ Tab <span
+          class="kbadge">Ctrl+T</span></button>
+      <button class="tbtn" onclick="toggleSearch()" aria-label="Find in terminal (Ctrl+F)">🔍 Find <span
+          class="kbadge">Ctrl+F</span></button>
+      <button class="tbtn" onclick="openCmdPalette()" aria-label="Command palette (Ctrl+Shift+P)">⌘ Commands <span
+          class="kbadge">⌘⇧P</span></button>
+      <div class="t-sep" role="separator"></div>
+      <button class="tbtn" onclick="sendLine('ls -la --color=auto')" aria-label="List files">📁 ls</button>
+      <button class="tbtn" onclick="sendLine('pwd')" aria-label="Print working directory">📍 pwd</button>
+      <button class="tbtn" onclick="sendLine('top -b -n1 | head -20')" aria-label="Show top processes">⚙ top</button>
+      <button class="tbtn" onclick="sendLine('df -h')" aria-label="Disk free">df</button>
+      <button class="tbtn" onclick="sendLine('free -h')" aria-label="Memory usage">mem</button>
+      <div class="t-sep" role="separator"></div>
+      <button class="tbtn blue" onclick="sendLine('git status')" aria-label="Git status">⎇ git</button>
+      <button class="tbtn blue" onclick="sendLine('git log --oneline -10')" aria-label="Git log">📜 log</button>
+      <button class="tbtn blue" onclick="sendLine('git pull origin main')" aria-label="Git pull">⬇ pull</button>
+      <button class="tbtn blue" onclick="sendLine('git push origin main')" aria-label="Git push">⬆ push</button>
+      <div class="t-sep" role="separator"></div>
+      <button class="tbtn orange" onclick="sendLine('railway status')" aria-label="Railway status">🚂 Railway</button>
+      <button class="tbtn orange" onclick="sendLine('railway up')" aria-label="Railway deploy">🚀 Deploy</button>
+      <div class="t-sep" role="separator"></div>
+      <button class="tbtn danger" onclick="sendCtrlC()" style="margin-left:auto"
+        aria-label="Send Ctrl+C interrupt">✕ Ctrl+C</button>
+    </nav>
 
-    <div id="search-bar">
-      <span style="color:var(--text3);font-size:11px">🔍</span>
+    <div id="search-bar" role="search" aria-label="Terminal search">
+      <span style="color:var(--text3);font-size:11px" aria-hidden="true">🔍</span>
       <input id="search-input" placeholder="Search terminal…" oninput="doSearch(this.value)"
-        onkeydown="searchKey(event)">
-      <button class="srch-btn" onclick="searchPrev()">▲</button>
-      <button class="srch-btn" onclick="searchNext()">▼</button>
-      <button class="srch-btn" onclick="toggleSearch()">✕</button>
+        onkeydown="searchKey(event)" aria-label="Search query">
+      <button class="srch-btn" onclick="searchPrev()" aria-label="Previous match">▲</button>
+      <button class="srch-btn" onclick="searchNext()" aria-label="Next match">▼</button>
+      <button class="srch-btn" onclick="toggleSearch()" aria-label="Close search">✕</button>
     </div>
 
-    <div id="main">
-      <div id="sidebar">
+    <main id="main">
+      <aside id="sidebar" role="complementary" aria-label="Sidebar navigation">
         <div class="sb-sec">
           <div class="sb-hdr">Sessions</div>
           <div class="sb-item active" id="sess-main"><span class="sb-item-ico">▶</span> main</div>
@@ -1438,6 +1617,9 @@
           <div class="sk-row"><span>Sidebar</span>
             <div class="sk-keys"><span class="key">Ctrl</span><span class="key">B</span></div>
           </div>
+          <div class="sk-row"><span>Commands</span>
+            <div class="sk-keys"><span class="key">Ctrl</span><span class="key">⇧P</span></div>
+          </div>
           <div class="sk-row"><span>Interrupt</span>
             <div class="sk-keys"><span class="key">Ctrl</span><span class="key">C</span></div>
           </div>
@@ -1449,15 +1631,16 @@
           <div style="color:var(--green);font-size:9px;letter-spacing:1.5px;margin-bottom:4px">▸ TEAMDEV</div>
           <div>@TeamDevXBots · @MR_ARMAN_08</div>
         </div>
-      </div>
+      </aside>
 
-      <div id="term-pane">
-        <div id="tabs">
-          <div class="tab active" id="tab-1">
-            <span>⬡</span> main
-            <span class="tab-x" onclick="closeTab(event,'tab-1')">×</span>
+      <section id="term-pane" role="main" aria-label="Terminal pane">
+        <div id="tabs" role="tablist" aria-label="Terminal tabs">
+          <div class="tab active" id="tab-1" role="tab" aria-selected="true" aria-controls="xterm-container">
+            <span aria-hidden="true">⬡</span> main
+            <span class="tab-x" onclick="closeTab(event,'tab-1')" role="button" aria-label="Close tab">×</span>
           </div>
-          <div class="tab-add" onclick="newTab()" title="New Tab (Ctrl+T)">＋</div>
+          <div class="tab-add" onclick="newTab()" title="New Tab (Ctrl+T)" role="button" aria-label="New tab"
+            tabindex="0">＋</div>
         </div>
         <div id="xterm-container">
           <div id="conn-overlay">
@@ -1465,9 +1648,9 @@
             <div class="conn-msg">Connecting to shell…</div>
           </div>
         </div>
-        <div id="bottombar">
+        <div id="bottombar" role="status" aria-label="Status bar">
           <div class="bb-seg">
-            <div class="bb-dot" style="background:var(--green);box-shadow:var(--glow-g)"></div>
+            <div class="bb-dot" style="background:var(--green);box-shadow:var(--glow-g)" aria-hidden="true"></div>
             <span class="bb-green">Ubuntu 24.04</span>
           </div>
           <div class="bb-seg"><span id="bb-user" class="bb-cyan">root@ubuntu</span></div>
@@ -1475,10 +1658,10 @@
           <div class="bb-seg"><span style="color:var(--text3)">Size:</span><span id="bb-size"
               class="bb-purple">—×—</span></div>
           <div class="bb-seg ml"><span style="color:var(--text3)">UTF-8</span></div>
-          <div id="prog"></div>
+          <div id="prog" role="progressbar" aria-label="Upload progress"></div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
     <div id="ctrl-bar">
       <button class="ctrl-key red" onclick="sendCtrlC()">Ctrl+C</button>
@@ -1509,9 +1692,9 @@
 
   </div>
 
-  <div id="upload-modal">
+  <div id="upload-modal" role="dialog" aria-modal="true" aria-label="Upload file">
     <div class="modal-box">
-      <span class="modal-close" onclick="closeUpload()">×</span>
+      <span class="modal-close" onclick="closeUpload()" role="button" aria-label="Close upload dialog">×</span>
       <div class="modal-title">⬆ UPLOAD FILE</div>
       <div id="dropzone">
         <input type="file" id="file-input" multiple onchange="handleFiles(this.files)">
@@ -1539,7 +1722,16 @@
     </div>
   </div>
 
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <div id="cmd-palette" role="dialog" aria-modal="false" aria-label="Command palette">
+    <div class="cmd-input-wrap">
+      <span aria-hidden="true">⌘</span>
+      <input id="cmd-input" placeholder="Type a command or search…" autocomplete="off" aria-label="Command palette input" />
+      <span class="cmd-kbadge">Esc</span>
+    </div>
+    <div id="cmd-list" role="listbox" aria-label="Available commands"></div>
+  </div>
 
   <script>
     const TERMINAL_PASSWORD = (typeof window.__TERMINAL_PASSWORD__ !== 'undefined')
@@ -1869,7 +2061,108 @@
       document.getElementById('ctrl-picker').style.display = 'none';
     }
 
+    /* ── Command Palette ── */
+    const CMD_COMMANDS = [
+      { ico: '⬆', label: 'Upload File', kbd: 'Ctrl+U', run: openUpload },
+      { ico: '⊘', label: 'Clear Terminal', kbd: 'Ctrl+L', run: clearTerm },
+      { ico: '＋', label: 'New Tab', kbd: 'Ctrl+T', run: newTab },
+      { ico: '🔍', label: 'Find in Terminal', kbd: 'Ctrl+F', run: toggleSearch },
+      { ico: '☰', label: 'Toggle Sidebar', kbd: 'Ctrl+B', run: toggleSidebar },
+      { ico: '✕', label: 'Send Ctrl+C (Interrupt)', kbd: '', run: sendCtrlC },
+      { ico: '⬡', label: 'Send Ctrl+D (EOF)', kbd: '', run: sendCtrlD },
+      { ico: '＋', label: 'New Window', kbd: 'Ctrl+N', run: () => window.open(location.href, '_blank') },
+      { ico: '⬆', label: 'Zoom In', kbd: 'Ctrl+=', run: () => setFontSize(fontSize + 1) },
+      { ico: '⬇', label: 'Zoom Out', kbd: 'Ctrl+-', run: () => setFontSize(fontSize - 1) },
+      { ico: '📁', label: 'Run: ls -la', kbd: '', run: () => sendLine('ls -la --color=auto') },
+      { ico: '📍', label: 'Run: pwd', kbd: '', run: () => sendLine('pwd') },
+      { ico: '⚙', label: 'Run: top', kbd: '', run: () => sendLine('top -b -n1 | head -20') },
+      { ico: '💽', label: 'Run: df -h', kbd: '', run: () => sendLine('df -h') },
+      { ico: '🧠', label: 'Run: free -h', kbd: '', run: () => sendLine('free -h') },
+      { ico: '⎇', label: 'Run: git status', kbd: '', run: () => sendLine('git status') },
+      { ico: '📜', label: 'Run: git log', kbd: '', run: () => sendLine('git log --oneline -10') },
+      { ico: '⬇', label: 'Run: git pull', kbd: '', run: () => sendLine('git pull origin main') },
+      { ico: '⬆', label: 'Run: git push', kbd: '', run: () => sendLine('git push origin main') },
+      { ico: '🐍', label: 'Run: python3 main.py', kbd: '', run: () => sendLine('python3 main.py') },
+      { ico: '📦', label: 'Run: pip install reqs', kbd: '', run: () => sendLine('pip3 install -r requirements.txt') },
+      { ico: '🔄', label: 'Run: apt upgrade', kbd: '', run: () => sendLine('sudo apt update && sudo apt upgrade -y') },
+      { ico: '📋', label: 'Run: journalctl -f', kbd: '', run: () => sendLine('journalctl -n 50 -f') },
+      { ico: '🚂', label: 'Railway status', kbd: '', run: () => sendLine('railway status') },
+      { ico: '🚀', label: 'Railway deploy', kbd: '', run: () => sendLine('railway up') },
+    ];
+    let cmdSelected = 0, cmdFiltered = [];
+
+    function openCmdPalette() {
+      const pal = document.getElementById('cmd-palette');
+      pal.classList.add('open');
+      const inp = document.getElementById('cmd-input');
+      inp.value = '';
+      renderCmdList('');
+      setTimeout(() => inp.focus(), 10);
+    }
+    function closeCmdPalette() {
+      document.getElementById('cmd-palette').classList.remove('open');
+      term && term.focus();
+    }
+    function renderCmdList(q) {
+      const list = document.getElementById('cmd-list');
+      q = (q || '').toLowerCase().trim();
+      cmdFiltered = q ? CMD_COMMANDS.filter(c => c.label.toLowerCase().includes(q)) : CMD_COMMANDS.slice();
+      cmdSelected = 0;
+      if (!cmdFiltered.length) {
+        list.innerHTML = '<div class="cmd-empty">No matching commands</div>';
+        return;
+      }
+      list.innerHTML = cmdFiltered.map((c, i) => `
+        <div class="cmd-item${i === 0 ? ' selected' : ''}" data-idx="${i}" role="option">
+          <span class="cmd-item-ico">${c.ico}</span>
+          <span class="cmd-item-label">${c.label}</span>
+          ${c.kbd ? `<span class="cmd-item-kbd">${c.kbd}</span>` : ''}
+        </div>`).join('');
+      list.querySelectorAll('.cmd-item').forEach(el => {
+        el.addEventListener('click', () => { cmdFiltered[+el.dataset.idx].run(); closeCmdPalette(); });
+        el.addEventListener('mouseenter', () => {
+          cmdSelected = +el.dataset.idx;
+          updateCmdSelected();
+        });
+      });
+    }
+    function updateCmdSelected() {
+      document.querySelectorAll('.cmd-item').forEach((el, i) => {
+        el.classList.toggle('selected', i === cmdSelected);
+      });
+      const sel = document.querySelector('.cmd-item.selected');
+      if (sel) sel.scrollIntoView({ block: 'nearest' });
+    }
+    function cmdNav(dir) {
+      if (!cmdFiltered.length) return;
+      cmdSelected = (cmdSelected + dir + cmdFiltered.length) % cmdFiltered.length;
+      updateCmdSelected();
+    }
+    function cmdExec() {
+      if (cmdFiltered[cmdSelected]) { cmdFiltered[cmdSelected].run(); closeCmdPalette(); }
+    }
+    document.getElementById('cmd-input').addEventListener('input', e => renderCmdList(e.target.value));
+    document.getElementById('cmd-input').addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); cmdNav(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); cmdNav(-1); }
+      else if (e.key === 'Enter') { e.preventDefault(); cmdExec(); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeCmdPalette(); }
+    });
+    document.addEventListener('click', e => {
+      const pal = document.getElementById('cmd-palette');
+      if (pal.classList.contains('open') && !pal.contains(e.target) && !e.target.closest('[onclick*="openCmdPalette"]')) {
+        closeCmdPalette();
+      }
+    });
+
     document.addEventListener('keydown', e => {
+      // Command palette: Ctrl+Shift+P or Ctrl+P
+      if (e.ctrlKey && (e.key === 'P' || e.key === 'p') && e.shiftKey) {
+        e.preventDefault();
+        const pal = document.getElementById('cmd-palette');
+        pal.classList.contains('open') ? closeCmdPalette() : openCmdPalette();
+        return;
+      }
       if (!e.ctrlKey) return;
       switch (e.key.toLowerCase()) {
         case 'u': e.preventDefault(); openUpload(); break;
