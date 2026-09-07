@@ -42,15 +42,19 @@ RUN apt-get update -qq && \
         conntrack \
         lsof strace \
         policykit-1 \
-        dbus \
+        dbus dbus-x11 \
         lvm2 \
         e2fsprogs \
         xfsprogs \
         util-linux \
+        # ── WARP daemon dependencies ──
+        libnss3 libnss-resolve \
+        ca-certificates \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo "${TZ}" > /etc/timezone \
+    && mkdir -p /run/dbus /var/run/dbus \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -75,6 +79,15 @@ net.ipv4.tcp_rfc1337 = 1\n\
 net.ipv4.tcp_fastopen = 3\n\
 net.ipv4.tcp_slow_start_after_idle = 0\n\
 net.ipv4.tcp_mtu_probing = 1\n' > /etc/sysctl.d/99-zzz-cloudflare-warp-connector.conf
+
+# ── 3b. Polkit rule: allow warp-svc to operate without desktop auth ──────
+RUN mkdir -p /etc/polkit-1/rules.d && \
+    printf 'polkit.addRule(function(action, subject) {\n\
+    if (action.id.startsWith("com.cloudflare.warp") &&\n\
+        subject.isInGroup("root")) {\n\
+        return polkit.Result.YES;\n\
+    }\n\
+});\n' > /etc/polkit-1/rules.d/10-cloudflare-warp.rules
 
 # ── 4. Railway CLI (optional, best-effort) ───────────────────────────────
 RUN curl -fsSL https://railway.app/install.sh | sh 2>/dev/null || true
