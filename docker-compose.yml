@@ -2,12 +2,9 @@ version: '3.9'
 
 services:
 
-  # ── TeamDev Terminal (with in-image Cloudflare Mesh) ────────────────────
-  #  The terminal image now includes the cloudflare-warp package, so the
-  #  Mesh connector runs in-image via entrypoint.sh.  Set MESH_NODE_TOKEN
-  #  to register the connector at startup.
-  #  For platforms that don't support docker-compose (Render, Railway…),
-  #  the same in-image mesh works from the Dockerfile alone.
+  # ── TeamDev Terminal (with Cloudflare Tunnel) ───────────────────────────
+  #  The terminal image includes the cloudflared binary.  Set TUNNEL_TOKEN
+  #  to start a Cloudflare Tunnel at startup via entrypoint.sh.
   terminal:
     build:
       context: .
@@ -15,24 +12,19 @@ services:
     container_name: TeamDevXTerminal
     image: teamdev/terminal:latest
     restart: always
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    devices:
-      - /dev/net/tun:/dev/net/tun
     ports:
       - "${PORT:-7681}:${PORT:-7681}"
     environment:
       - PORT=${PORT:-7681}
       - TERMINAL_PASSWORD=${TERMINAL_PASSWORD:-R@b1u2004@}
-      - MESH_NODE_TOKEN=${MESH_NODE_TOKEN:-}
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
       - KEEPALIVE_URL=${KEEPALIVE_URL:-}
       - TERM=xterm-256color
       - LANG=en_US.UTF-8
     volumes:
       - uploads:/tmp/teamdev_uploads
       - bash_history:/root/.bash_history_dir
-      - warp_data:/var/lib/cloudflare-warp
+      - cloudflared_data:/root/.cloudflared
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-7681}/health"]
       interval: 30s
@@ -53,7 +45,7 @@ volumes:
     driver: local
   bash_history:
     driver: local
-  warp_data:
+  cloudflared_data:
     driver: local
 
 networks:

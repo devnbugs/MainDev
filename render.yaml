@@ -9,7 +9,7 @@ services:
         value: 10000
       - key: TERMINAL_PASSWORD
         sync: false
-      - key: MESH_NODE_TOKEN
+      - key: TUNNEL_TOKEN
         sync: false
       - key: KEEPALIVE_URL
         fromService:

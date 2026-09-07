@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
 #  TeamDev X Terminal — Entrypoint
-#  Applies sysctl tuning, starts Cloudflare Mesh connector (if token
-#  provided), then starts the terminal server.
+#  Applies sysctl tuning, starts Cloudflare Tunnel (if token provided),
+#  then starts the terminal server.
 #
-#  Cloudflare Mesh runs in-image via the cloudflare-warp package.
-#  Set MESH_NODE_TOKEN to register the connector at startup.
-#  If no token or warp-svc fails, the terminal still works normally.
+#  Cloudflare Tunnel runs in-image via the cloudflared binary.
+#  Set TUNNEL_TOKEN to start the tunnel at startup.
+#  If no token, the terminal still works normally.
 # ════════════════════════════════════════════════════════════════════════
 set -e
 
@@ -20,56 +20,35 @@ sysctl -q net.ipv4.ip_forward=1          2>/dev/null || warn "cannot set net.ipv
 sysctl -q net.ipv6.conf.all.forwarding=1  2>/dev/null || true
 sysctl -q net.ipv6.conf.all.accept_ra=2   2>/dev/null || true
 
-# ── 2. Cloudflare Mesh connector (in-image, best-effort) ───────────────────
-MESH_TOKEN="${MESH_NODE_TOKEN:-}"
+# ── 2. Cloudflare Tunnel (cloudflared, best-effort) ────────────────────────
+TUNNEL_TOKEN="${TUNNEL_TOKEN:-}"
 
-if [ -n "$MESH_TOKEN" ] && [ -x /usr/bin/warp-svc ]; then
-  log "starting Cloudflare Mesh connector…"
+if [ -n "$TUNNEL_TOKEN" ] && [ -x /usr/local/bin/cloudflared ]; then
+  log "starting Cloudflare Tunnel…"
 
-  # D-Bus is required by warp-svc
-  if command -v dbus-daemon >/dev/null 2>&1; then
-    log "starting D-Bus…"
-    mkdir -p /run/dbus
-    dbus-daemon --system --fork 2>/dev/null || warn "dbus-daemon failed to start"
-  fi
+  # Run cloudflared in the background — it connects to Cloudflare's edge
+  # and routes traffic to localhost:PORT via the tunnel config in your
+  # Cloudflare dashboard (Quick Tunnel or named tunnel with ingress rules).
+  nohup cloudflared tunnel --no-autoupdate \
+    --metrics 127.0.0.1:38000 \
+    run --token "$TUNNEL_TOKEN" \
+    >/var/log/cloudflared.log 2>&1 &
+  CF_PID=$!
+  log "cloudflared started (PID $CF_PID)"
 
-  # Start warp-svc in the background
-  warp-svc >/var/log/warp-svc.log 2>&1 &
-  WARP_PID=$!
-  log "warp-svc started (PID $WARP_PID)"
-
-  # Wait for warp-svc to be ready
-  for i in $(seq 1 15); do
-    if warp-cli --accept-tos status >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
-
-  # Register the connector with the mesh token
-  log "registering mesh connector…"
-  if warp-cli --accept-tos connector new "$MESH_TOKEN" 2>/dev/null; then
-    log "mesh connector registered"
+  # Wait briefly and check it's still alive
+  sleep 3
+  if kill -0 "$CF_PID" 2>/dev/null; then
+    log "✓ Cloudflare Tunnel is running"
   else
-    # If already registered, just connect
-    warn "connector new failed — may already be registered, trying connect…"
-  fi
-
-  warp-cli --accept-tos connect 2>/dev/null || warn "warp-cli connect failed"
-
-  # Verify status
-  sleep 2
-  if warp-cli --accept-tos status 2>/dev/null | grep -qi "connected\|connecting"; then
-    log "✓ Cloudflare Mesh is active"
-  else
-    warn "mesh connector not connected — check MESH_NODE_TOKEN and logs"
-    warn "warp-svc log: $(tail -3 /var/log/warp-svc.log 2>/dev/null || echo 'no logs')"
+    warn "cloudflared exited early — check TUNNEL_TOKEN and logs"
+    warn "cloudflared log: $(tail -5 /var/log/cloudflared.log 2>/dev/null || echo 'no logs')"
   fi
 else
-  if [ -z "$MESH_TOKEN" ]; then
-    log "MESH_NODE_TOKEN not set — skipping Cloudflare Mesh"
+  if [ -z "$TUNNEL_TOKEN" ]; then
+    log "TUNNEL_TOKEN not set — skipping Cloudflare Tunnel"
   else
-    warn "warp-svc not found — Cloudflare Mesh not available"
+    warn "cloudflared binary not found — Cloudflare Tunnel not available"
   fi
 fi
 

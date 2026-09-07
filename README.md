@@ -69,9 +69,9 @@ TeamDev-Terminal/
 ├── manifest.json             # PWA web app manifest
 ├── icon-192.png              # PWA icon (192×192)
 ├── icon-512.png              # PWA icon (512×512)
-├── Dockerfile                # Ubuntu 24.04 image (system-optimised + WARP)
-├── entrypoint.sh             # Runtime init: sysctl → WARP mesh → terminal
-├── docker-compose.yml        # Compose stack with volumes, caps & health check
+├── Dockerfile                # Ubuntu 24.04 image (system-optimised + cloudflared)
+├── entrypoint.sh             # Runtime init: sysctl → cloudflared tunnel → terminal
+├── docker-compose.yml        # Compose stack with volumes & health check
 ├── .env.example              # Environment variable template
 ├── .dockerignore             # Docker build exclusions
 │
@@ -169,7 +169,7 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 | `TERMINAL_PASSWORD` | `R@b1u2004@`         | Password required to access the terminal UI                                 |
 | `KEEPALIVE_URL`     | *(empty)*            | If set, the server pings `<KEEPALIVE_URL>/health` every 25 s to prevent idle spin-down on free-tier hosts |
 | `SHELL`             | `/bin/bash`          | Shell binary to spawn for PTY sessions                                      |
-| `MESH_NODE_TOKEN`   | *(empty)*            | Cloudflare Mesh node token. Used by the `cloudflare/mesh` sidecar container in `docker-compose.yml`. Create a node in Cloudflare Dashboard → Networking → Mesh. |
+| `TUNNEL_TOKEN`      | *(empty)*            | Cloudflare Tunnel token. When set, entrypoint starts `cloudflared tunnel run --token <TOKEN>` to expose the terminal via a Cloudflare Tunnel. Create a tunnel in Cloudflare Zero Trust → Networks → Tunnels. |
 
 ### `.env.example`
 
@@ -177,68 +177,52 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 PORT=7681
 TERMINAL_PASSWORD=R@b1u2004@
 KEEPALIVE_URL=https://your-app.onrender.com
-MESH_NODE_TOKEN=      # optional Cloudflare Mesh node token
+TUNNEL_TOKEN=         # optional Cloudflare Tunnel token
 ```
 
 > **Important:** Always change `TERMINAL_PASSWORD` before deploying to a public-facing host.
 
 ---
 
-## ☁️ Cloudflare Mesh (optional)
+## ☁️ Cloudflare Tunnel (optional)
 
-The project uses Cloudflare's official **`cloudflare/mesh:latest`** Docker image as a sidecar container. The terminal shares the mesh container's network namespace, so all traffic flows through the Cloudflare mesh tunnel automatically — no WARP install needed inside the terminal image.
+The project includes the `cloudflared` binary in the Docker image. When `TUNNEL_TOKEN` is set, the entrypoint starts `cloudflared tunnel run --token "$TUNNEL_TOKEN"` in the background, exposing the terminal through Cloudflare's edge network — no special capabilities needed.
 
-### Deploy with Mesh (Docker Compose)
+### Deploy with Tunnel (Docker Compose)
 
 ```bash
-# Set your mesh node token
-export MESH_NODE_TOKEN="eyJhIjoi…"
+# Set your tunnel token
+export TUNNEL_TOKEN="eyJhIjoi…"
 
-# Start both containers
+# Start the container
 docker compose up -d
 ```
 
-The `docker-compose.yml` runs two services:
-- **`cloudflare-mesh`** — official `cloudflare/mesh:latest` image with `NET_ADMIN`, `NET_RAW`, `/dev/net/tun`, and `MESH_NODE_TOKEN`
-- **`terminal`** — TeamDev terminal using `network_mode: service:cloudflare-mesh` to share the mesh's network namespace
-
-### Deploy with Mesh (Docker CLI)
+### Deploy with Tunnel (Docker CLI)
 
 ```bash
-# Start the mesh sidecar
 docker run -d \
-  --name cloudflare-mesh \
-  --cap-add NET_ADMIN --cap-add NET_RAW \
-  --device /dev/net/tun:/dev/net/tun \
-  --sysctl net.ipv4.ip_forward=1 \
-  --sysctl net.ipv6.conf.all.forwarding=1 \
-  -e MESH_NODE_TOKEN="eyJhIjoi…" \
-  -v mesh_data:/var/lib/cloudflare-warp \
-  --restart unless-stopped \
-  cloudflare/mesh:latest
-
-# Start the terminal sharing the mesh network
-docker run -d \
-  --network container:cloudflare-mesh \
   -e TERMINAL_PASSWORD="YourSecurePassword" \
+  -e TUNNEL_TOKEN="eyJhIjoi…" \
   -e PORT=7681 \
   -p 7681:7681 \
   --name teamdev-terminal \
   teamdev/terminal:latest
 ```
 
-### Without Mesh
+### Without Tunnel
 
-Leave `MESH_NODE_TOKEN` empty and run only the terminal service — no mesh, no extra capabilities needed.
+Leave `TUNNEL_TOKEN` empty and run only the terminal service — no tunnel, no extra capabilities needed.
 
-### Getting a Mesh node token
+### Getting a Tunnel token
 
-1. Go to **Cloudflare Dashboard → Networking → Mesh**.
-2. Click **Add a node**, enter a name, and click **Create node**.
-3. Copy the token shown in the dashboard.
-4. Pass it as the `MESH_NODE_TOKEN` environment variable.
+1. Go to **Cloudflare Zero Trust → Networks → Tunnels**.
+2. Click **Add a tunnel**, select **Cloudflared**, and create it.
+3. Under **Configure**, add a public hostname (e.g. `terminal.yourdomain.com`) pointing to `http://localhost:7681`.
+4. Copy the **Install connector** token.
+5. Pass it as the `TUNNEL_TOKEN` environment variable.
 
-> 📖 **Docs:** [Run Cloudflare Mesh in containers](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-mesh/containers/)
+> 📖 **Docs:** [Connect networks with Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
 
 ---
 
@@ -425,8 +409,8 @@ Browser
   │  WS  ws://host/      → WebSocket terminal session
   │
   ▼
-entrypoint.sh  →  sysctl tuning  →  warp-svc + warp-cli  →  terminal_server.py
-                                                    (optional Cloudflare mesh)
+entrypoint.sh  →  sysctl tuning  →  cloudflared tunnel  →  terminal_server.py
+                                                    (optional Cloudflare Tunnel)
 terminal_server.py  (pure Python, stdlib only)
   │
   ├── TermServer          raw TCP server, per-connection thread

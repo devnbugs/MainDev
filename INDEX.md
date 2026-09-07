@@ -12,9 +12,9 @@
 |------|-------|------|
 | `terminal_server.py` | 360 | Backend — HTTP + WebSocket server, PTY session manager (pure Python stdlib) |
 | `teamdev_terminal_ui.html` | 725 | Frontend — single-file UI (xterm.js, CSS, JS, PWA hooks) |
-| `Dockerfile` | ~90 | Ubuntu 24.04 image — system-optimised + Cloudflare WARP client |
-| `entrypoint.sh` | ~70 | Runtime init: sysctl → WARP daemon → connector register → connect → app |
-| `docker-compose.yml` | ~60 | Compose stack: volumes, caps/sysctls for WARP, health check, logging |
+| `Dockerfile` | ~90 | Ubuntu 24.04 image — system-optimised + Cloudflare Tunnel (cloudflared) |
+| `entrypoint.sh` | ~70 | Runtime init: sysctl → cloudflared tunnel → app |
+| `docker-compose.yml` | ~60 | Compose stack: volumes, health check, logging |
 | `manifest.json` | 40 | PWA web app manifest (icons, shortcuts, standalone display) |
 | `requirements.txt` | 0 | Intentionally empty — zero pip dependencies |
 | `icon-192.png` / `icon-512.png` | — | PWA icons |
@@ -77,7 +77,8 @@ terminal_server.py  (pure Python, stdlib only)
 | `PORT` | `7681` | Listen port |
 | `TERMINAL_PASSWORD` | `R@b1u2004@` | Login password (injected into served HTML) |
 | `KEEPALIVE_URL` | *(empty)* | If set, pings `<url>/health` every 25 s to prevent spin-down |
-| `SHELL` | `/bin/bash` | Shell binary for PTY sessions || `WARP_TOKEN` | *(empty)* | Cloudflare WARP connector token (base64 JSON). When set, entrypoint starts `warp-svc`, registers the connector, and joins the mesh before launching the terminal. Requires `--privileged` or `cap_add: [NET_ADMIN, SYS_ADMIN]` at runtime. |
+| `SHELL` | `/bin/bash` | Shell binary for PTY sessions |
+| `TUNNEL_TOKEN` | *(empty)* | Cloudflare Tunnel token. When set, entrypoint starts `cloudflared tunnel run --token <TOKEN>` to expose the terminal via a Cloudflare Tunnel. No special capabilities needed. |
 ### WebSocket protocol helpers
 - `ws_accept_key(key)` — SHA-1 + base64 Sec-WebSocket-Accept
 - `ws_handshake(key)` — 101 Switching Protocols response
@@ -114,19 +115,17 @@ terminal_server.py  (pure Python, stdlib only)
 
 ---
 
-## ☁️ Cloudflare WARP Mesh (`entrypoint.sh`)
+## ☁️ Cloudflare Tunnel (`entrypoint.sh`)
 
-The Docker image ships with the Cloudflare WARP client pre-installed. When `WARP_TOKEN` is set, the entrypoint:
+The Docker image ships with the `cloudflared` binary pre-installed. When `TUNNEL_TOKEN` is set, the entrypoint:
 
 1. Applies kernel forwarding sysctls (`ip_forward`, IPv6 forwarding, `accept_ra` + TCP tuning)
-2. Starts `warp-svc` daemon in the background
-3. Registers the connector: `warp-cli connector new "$WARP_TOKEN"`
-4. Connects: `warp-cli connect`
-5. Waits for `Connected` status (max 30 s), then `exec python3 terminal_server.py`
+2. Starts `cloudflared tunnel run --token "$TUNNEL_TOKEN"` in the background
+3. Verifies the process is alive, then `exec python3 terminal_server.py`
 
-**Runtime requirements:** `--privileged` or `--cap-add=NET_ADMIN --cap-add=SYS_ADMIN --cap-add=NET_RAW` (WARP creates a WireGuard tunnel and modifies routing). Without `WARP_TOKEN`, the container starts the terminal normally with no extra capabilities.
+**No special capabilities needed** — cloudflared makes outbound HTTPS connections to Cloudflare's edge, so it works on any platform (Render, Railway, Fly.io, etc.) without `NET_ADMIN` or `/dev/net/tun`. Without `TUNNEL_TOKEN`, the container starts the terminal normally.
 
-**Why runtime, not build time:** the `warp-svc` daemon needs a live network namespace, and connector registration can't persist across image layers. The entrypoint runs WARP at container start so it works on any deploy target that grants the required capabilities.
+**Why runtime, not build time:** the tunnel token is secret and the tunnel must connect to Cloudflare's edge at container start. The entrypoint runs cloudflared at container start so it works on any deploy target.
 
 ---
 

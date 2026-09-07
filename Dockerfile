@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 LABEL maintainer="@MR_ARMAN_08"
 LABEL org.opencontainers.image.title="TeamDev X Terminal"
-LABEL org.opencontainers.image.description="TeamDev Terminal – Root + ubuntu + Cloudflare WARP mesh"
+LABEL org.opencontainers.image.description="TeamDev Terminal – Root + ubuntu + Cloudflare Tunnel"
 LABEL org.opencontainers.image.url="https://t.me/Team_X_Og"
 LABEL org.opencontainers.image.version="2.5.0"
 
@@ -45,8 +45,6 @@ RUN apt-get update -qq && \
         e2fsprogs \
         xfsprogs \
         util-linux \
-        # ── Cloudflare Mesh (in-image connector) ──
-        dbus dbus-x11 \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -65,20 +63,14 @@ net.ipv4.tcp_fastopen = 3\n\
 net.ipv4.tcp_slow_start_after_idle = 0\n\
 net.ipv4.tcp_mtu_probing = 1\n' > /etc/sysctl.d/99-zzz-network-tuning.conf
 
-# ── 3. Cloudflare Mesh connector (in-image) ───────────────────────────────
-#  Installs the cloudflare-warp package so the Mesh connector can run
-#  directly inside this container — no sidecar needed.  Works on
-#  single-container platforms like Render, Railway, Fly.io, etc.
-#  The connector is registered at runtime via MESH_NODE_TOKEN in
-#  entrypoint.sh.
-RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
-        gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ noble main" | \
-        tee /etc/apt/sources.list.d/cloudflare-client.list && \
-    apt-get update -qq && \
-    apt-get install -y --no-install-recommends cloudflare-warp && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# ── 3. Cloudflare Tunnel (cloudflared) ───────────────────────────────────
+#  Installs the cloudflared binary so the terminal can expose itself via
+#  a Cloudflare Tunnel.  Set TUNNEL_TOKEN at deploy time and the entrypoint
+#  starts `cloudflared tunnel run` automatically.
+#  Docs: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+RUN curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+        -o /usr/local/bin/cloudflared && \
+    chmod +x /usr/local/bin/cloudflared
 
 # ── 4. Railway CLI (optional, best-effort) ───────────────────────────────
 RUN curl -fsSL https://railway.app/install.sh | sh 2>/dev/null || true
@@ -99,13 +91,11 @@ RUN echo "root ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     echo "teamdev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 2>/dev/null || true
 
 # ── 7. Runtime config ────────────────────────────────────────────────────
-# Cloudflare Mesh connector runs in-image via cloudflare-warp package.
-# Set MESH_NODE_TOKEN at deploy time to register the connector.
-# The entrypoint starts warp-svc, registers with the token, and connects.
-# If MESH_NODE_TOKEN is empty or warp-svc fails (e.g. no NET_ADMIN),
-# the terminal still works — mesh is best-effort.
+# Cloudflare Tunnel runs in-image via the cloudflared binary.
+# Set TUNNEL_TOKEN at deploy time to start the tunnel.
+# If TUNNEL_TOKEN is empty, cloudflared is skipped — terminal works normally.
 
-VOLUME ["/tmp/teamdev_uploads", "/root/.bash_history_dir", "/var/lib/cloudflare-warp"]
+VOLUME ["/tmp/teamdev_uploads", "/root/.bash_history_dir", "/root/.cloudflared"]
 
 STOPSIGNAL SIGINT
 
@@ -114,5 +104,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 
 EXPOSE ${PORT}
 
-# Entrypoint handles: sysctl → warp-svc → connector register → connect → app
+# Entrypoint handles: sysctl → cloudflared tunnel → app
 ENTRYPOINT ["./entrypoint.sh"]
