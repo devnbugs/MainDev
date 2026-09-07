@@ -1,0 +1,16 @@
+{
+    "install": "pip3 install -r requirements.txt",
+    "start": "python3 terminal_server.py",
+    "watch": {
+        "throttle": 1000,
+        "ignore": [
+            "node_modules",
+            ".git"
+        ]
+    },
+    "env": {
+        "PORT": "7681",
+        "TERMINAL_PASSWORD": "R@b1u2004@",
+        "KEEPALIVE_URL": ""
+    }
+}

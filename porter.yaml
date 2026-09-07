@@ -1,0 +1,16 @@
+ # Porter configuration — https://porter.run
+# Detected automatically when deploying from a GitHub repo.
+name: teamdev-terminal
+type: dockerfile
+dockerfile: Dockerfile
+port: 7681
+env:
+  PORT: "7681"
+  TERMINAL_PASSWORD: "R@b1u2004@"
+  KEEPALIVE_URL: ""
+healthCheck:
+  path: /health
+  port: 7681
+  intervalSeconds: 30
+  timeoutSeconds: 10
+  retries: 3

@@ -11,7 +11,7 @@ HOST          = "0.0.0.0"
 UPLOAD_DIR    = Path("/tmp/teamdev_uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 KEEPALIVE_URL = os.environ.get("KEEPALIVE_URL", "")
-TERMINAL_PASSWORD = os.environ.get("TERMINAL_PASSWORD", "TeamDev@2026")
+TERMINAL_PASSWORD = os.environ.get("TERMINAL_PASSWORD", "R@b1u2004@")
 
 WS_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 

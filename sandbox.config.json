@@ -1,0 +1,10 @@
+{
+    "name": "teamdev-terminal",
+    "description": "TeamDev X Terminal — browser-based Ubuntu 24.04 PTY terminal",
+    "run": "python3 terminal_server.py",
+    "env": {
+        "PORT": "7681",
+        "TERMINAL_PASSWORD": "R@b1u2004@",
+        "KEEPALIVE_URL": ""
+    }
+}

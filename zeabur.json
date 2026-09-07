@@ -1,0 +1,20 @@
+{
+    "$schema": "https://schema.zeabur.app/template.json",
+    "name": "teamdev-terminal",
+    "description": "TeamDev X Terminal — browser-based Ubuntu 24.04 PTY terminal",
+    "services": [
+        {
+            "name": "terminal",
+            "source": {
+                "dockerfile": "Dockerfile"
+            },
+            "port": 7681,
+            "healthCheckPath": "/health",
+            "env": {
+                "PORT": "7681",
+                "TERMINAL_PASSWORD": "R@b1u2004@",
+                "KEEPALIVE_URL": ""
+            }
+        }
+    ]
+}

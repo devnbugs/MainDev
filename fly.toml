@@ -1,0 +1,40 @@
+# Fly.io configuration — https://fly.io
+# Detected automatically by `fly launch` / `fly deploy`.
+# Deploy:  fly launch --copy-config --no-deploy && fly deploy
+app = "teamdev-terminal"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[build]
+  image = "ubuntu:24.04"
+
+[env]
+  PORT = "8080"
+  TERMINAL_PASSWORD = "R@b1u2004@"
+  KEEPALIVE_URL = ""
+  SHELL = "/bin/bash"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
+
+[[mounts]]
+  source = "teamdev_uploads"
+  destination = "/tmp/teamdev_uploads"
+
+[checks]
+  [checks.health]
+    port = 8080
+    path = "/health"
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "5s"

@@ -1,0 +1,12 @@
+{
+    "name": "teamdev-terminal",
+    "type": "python",
+    "env": {
+        "PORT": "7681",
+        "TERMINAL_PASSWORD": "R@b1u2004@",
+        "KEEPALIVE_URL": ""
+    },
+    "scripts": {
+        "start": "python3 terminal_server.py"
+    }
+}

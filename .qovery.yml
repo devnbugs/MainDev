@@ -1,0 +1,20 @@
+# Qovery configuration — https://qovery.com
+# Detected automatically when deploying from a GitHub repo.
+application:
+  name: teamdev-terminal
+  build:
+    dockerfile_path: Dockerfile
+  environment:
+    - PORT=7681
+    - TERMINAL_PASSWORD=R@b1u2004@
+    - KEEPALIVE_URL=
+  healthchecks:
+    - port: 7681
+      path: /health
+      interval: 30
+      timeout: 10
+      retries: 3
+  storage:
+    - name: teamdev-uploads
+      mount_point: /tmp/teamdev_uploads
+      size: 1

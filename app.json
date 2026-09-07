@@ -1,0 +1,43 @@
+{
+    "name": "teamdev-terminal",
+    "description": "TeamDev X Terminal — browser-based Ubuntu 24.04 PTY terminal",
+    "keywords": [
+        "terminal",
+        "ubuntu",
+        "pty",
+        "websocket",
+        "devops"
+    ],
+    "website": "https://github.com/your-org/teamdev-terminal",
+    "repository": "https://github.com/your-org/teamdev-terminal",
+    "logo": "icon-512.png",
+    "success_url": "/",
+    "env": {
+        "PORT": {
+            "description": "Port the server listens on",
+            "value": "7681"
+        },
+        "TERMINAL_PASSWORD": {
+            "description": "Password required to access the terminal UI",
+            "value": "R@b1u2004@"
+        },
+        "KEEPALIVE_URL": {
+            "description": "Optional URL to ping every 25s to prevent idle spin-down",
+            "required": false
+        }
+    },
+    "formation": {
+        "web": {
+            "quantity": 1,
+            "size": "basic"
+        }
+    },
+    "buildpacks": [
+        {
+            "url": "heroku/python"
+        }
+    ],
+    "scripts": {
+        "postdeploy": "echo 'TeamDev Terminal deployed!'"
+    }
+}

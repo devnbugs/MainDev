@@ -1,0 +1,19 @@
+# Deta Space configuration — https://deta.space
+# Detected automatically when deploying with `space push`.
+v: 0
+app_name: teamdev-terminal
+micros:
+  - name: terminal
+    src: .
+    engine: docker
+    dockerfile: Dockerfile
+    public: true
+    port: 7681
+    run: python3 terminal_server.py
+    env:
+      - name: PORT
+        value: "7681"
+      - name: TERMINAL_PASSWORD
+        value: "R@b1u2004@"
+      - name: KEEPALIVE_URL
+        value: ""

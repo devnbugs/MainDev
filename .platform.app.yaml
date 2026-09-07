@@ -1,0 +1,30 @@
+# Platform.sh configuration — https://platform.sh
+# Detected automatically when deploying from a GitHub repo.
+name: teamdev-terminal
+type: python:3.11
+disk: 1024
+
+hooks:
+  build: |
+    echo "no build needed"
+
+web:
+  commands:
+    start: "python3 terminal_server.py"
+  locations:
+    "/":
+      allow: false
+      passthru: true
+      scripts: false
+      headers:
+        Access-Control-Allow-Origin: "*"
+
+runtime:
+  extensions:
+    - pty
+
+variables:
+  env:
+    PORT: "7681"
+    TERMINAL_PASSWORD: "R@b1u2004@"
+    KEEPALIVE_URL: ""

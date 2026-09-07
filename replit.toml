@@ -1,0 +1,15 @@
+# Replit configuration — https://replit.com
+# Detected automatically when opening the repo in Replit.
+run = "python3 terminal_server.py"
+entrypoint = "terminal_server.py"
+
+[env]
+PORT = "7681"
+TERMINAL_PASSWORD = "R@b1u2004@"
+KEEPALIVE_URL = ""
+
+[nix]
+channel = "stable"
+
+[packager]
+language = "python3"

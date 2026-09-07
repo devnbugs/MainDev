@@ -69,13 +69,34 @@ TeamDev-Terminal/
 ├── manifest.json             # PWA web app manifest
 ├── icon-192.png              # PWA icon (192×192)
 ├── icon-512.png              # PWA icon (512×512)
-├── Dockerfile                # Ubuntu 24.04 image
-├── docker-compose.yml        # Compose stack with volumes & health check
+├── Dockerfile                # Ubuntu 24.04 image (system-optimised + WARP)
+├── entrypoint.sh             # Runtime init: sysctl → WARP mesh → terminal
+├── docker-compose.yml        # Compose stack with volumes, caps & health check
 ├── .env.example              # Environment variable template
 ├── .dockerignore             # Docker build exclusions
-├── railway.json              # Railway deployment config
-├── render.yaml               # Render deployment config
-├── Procfile                  # Heroku / Procfile-based platform config
+│
+├── # ── Platform configs (auto-detected) ──
+├── railway.json              # Railway
+├── render.yaml               # Render
+├── fly.toml                  # Fly.io
+├── koyeb.yml                 # Koyeb
+├── zeabur.json               # Zeabur
+├── northflank.json           # Northflank
+├── adaptable.json            # Adaptable
+├── .qovery.yml               # Qovery
+├── .platform.app.yaml        # Platform.sh
+├── clevercloud/python.json   # Clever Cloud
+├── scalingo.json             # Scalingo
+├── glitch.json               # Glitch
+├── replit.toml               # Replit
+├── captain-definition        # CapRover
+├── Detafile                  # Deta Space
+├── porter.yaml               # Porter
+├── Procfile                  # Heroku / Procfile-based platforms
+├── app.json                  # Heroku deploy button metadata
+├── runtime.txt               # Heroku Python version pin
+├── .gitpod.yml               # Gitpod dev environment
+├── sandbox.config.json       # CodeSandbox dev environment
 └── requirements.txt          # Empty — no pip dependencies
 ```
 
@@ -144,22 +165,92 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 | Variable            | Default              | Description                                                                 |
 |---------------------|----------------------|-----------------------------------------------------------------------------|
 | `PORT`              | `7681`               | TCP port the server listens on                                              |
-| `TERMINAL_PASSWORD` | `TeamDev@2026`       | Password required to access the terminal UI                                 |
+| `TERMINAL_PASSWORD` | `R@b1u2004@`         | Password required to access the terminal UI                                 |
 | `KEEPALIVE_URL`     | *(empty)*            | If set, the server pings `<KEEPALIVE_URL>/health` every 25 s to prevent idle spin-down on free-tier hosts |
 | `SHELL`             | `/bin/bash`          | Shell binary to spawn for PTY sessions                                      |
+| `WARP_TOKEN`        | *(empty)*            | Cloudflare WARP connector token (base64 JSON). When set, the entrypoint starts `warp-svc`, registers the connector, and joins the Cloudflare mesh before launching the terminal. Requires `--privileged` or `cap_add: [NET_ADMIN, SYS_ADMIN]` at runtime. |
 
 ### `.env.example`
 
 ```dotenv
 PORT=7681
+TERMINAL_PASSWORD=R@b1u2004@
 KEEPALIVE_URL=https://your-app.onrender.com
+WARP_TOKEN=          # optional Cloudflare WARP connector token
 ```
 
 > **Important:** Always change `TERMINAL_PASSWORD` before deploying to a public-facing host.
 
 ---
 
+## ☁️ Cloudflare WARP Mesh (optional)
+
+The Docker image ships with the **Cloudflare WARP** client pre-installed. When you provide a `WARP_TOKEN`, the [`entrypoint.sh`](entrypoint.sh) script:
+
+1. Applies kernel forwarding sysctls (`ip_forward`, IPv6 forwarding, `accept_ra`)
+2. Starts the `warp-svc` daemon in the background
+3. Registers the connector with your token (`warp-cli connector new`)
+4. Connects to the Cloudflare mesh (`warp-cli connect`)
+5. Waits for `Connected` status, then launches the terminal server
+
+### Deploy with WARP
+
+```bash
+docker run -d \
+  -p 7681:7681 \
+  --privileged \
+  -e TERMINAL_PASSWORD="YourSecurePassword" \
+  -e WARP_TOKEN="eyJhIjoi…" \
+  --name teamdev-terminal \
+  teamdev/terminal:latest
+```
+
+> **Why `--privileged`?** The WARP connector creates a WireGuard tunnel and modifies routing tables, which requires `NET_ADMIN` + `SYS_ADMIN` capabilities. For tighter security, replace `--privileged` with `--cap-add=NET_ADMIN --cap-add=SYS_ADMIN --cap-add=NET_RAW`.
+
+### Without WARP
+
+Leave `WARP_TOKEN` empty (the default) and the container starts the terminal normally — no mesh, no extra capabilities needed.
+
+### Getting a connector token
+
+1. Go to **Cloudflare Zero Trust → Networks → Tunnels → Connectors**.
+2. Create a new connector and copy the base64 token.
+3. Pass it as the `WARP_TOKEN` environment variable.
+
+---
+
+---
+
 ## 🌐 Deployment
+
+> **Zero-config everywhere** — this repo ships a unique config file for **every major deployer**, so each platform auto-detects the project when you connect your GitHub repo. Just pick your platform below.
+
+### 📋 Platform Matrix
+
+| Platform | Config file | Auto-detected | Notes |
+|----------|-------------|:---:|-------|
+| **Railway** | `railway.json` | ✅ | Nixpacks, health check, restart rollback |
+| **Render** | `render.yaml` | ✅ | Port 10000, auto keepalive URL |
+| **Fly.io** | `fly.toml` | ✅ | Volumes, health check, auto-stop machines |
+| **Koyeb** | `koyeb.yml` | ✅ | Dockerfile, health check, volume |
+| **Zeabur** | `zeabur.json` | ✅ | Dockerfile, health check |
+| **Northflank** | `northflank.json` | ✅ | Dockerfile, health check, volume |
+| **Adaptable** | `adaptable.json` | ✅ | Python, health check |
+| **Qovery** | `.qovery.yml` | ✅ | Dockerfile, health check, storage |
+| **Platform.sh** | `.platform.app.yaml` | ✅ | Python 3.11, disk |
+| **Clever Cloud** | `clevercloud/python.json` | ✅ | Python, start command |
+| **Scalingo** | `scalingo.json` | ✅ | Python, start command |
+| **Glitch** | `glitch.json` | ✅ | Install + start |
+| **Replit** | `replit.toml` | ✅ | Run command + env |
+| **CapRover** | `captain-definition` | ✅ | Dockerfile |
+| **Deta Space** | `Detafile` | ✅ | Docker micro |
+| **Porter** | `porter.yaml` | ✅ | Dockerfile, health check |
+| **Heroku** | `Procfile` + `app.json` + `runtime.txt` | ✅ | Python buildpack |
+| **Gitpod** | `.gitpod.yml` | ✅ | Dev environment |
+| **CodeSandbox** | `sandbox.config.json` | ✅ | Dev environment |
+| **Docker / Compose** | `Dockerfile` + `docker-compose.yml` | ✅ | Any Docker host |
+
+---
 
 ### Railway
 
@@ -173,7 +264,9 @@ KEEPALIVE_URL=https://your-app.onrender.com
 {
   "deploy": {
     "startCommand": "python3 terminal_server.py",
-    "restartPolicyType": "ON_FAILURE"
+    "restartPolicyType": "ON_FAILURE",
+    "healthcheckPath": "/health",
+    "restartRollback": true
   }
 }
 ```
@@ -190,13 +283,39 @@ The `render.yaml` sets `PORT=10000` (Render's required port) and wires `KEEPALIV
 
 ---
 
+### Fly.io
+
+```bash
+fly launch --copy-config --no-deploy
+fly secrets set TERMINAL_PASSWORD="YourSecurePassword"
+fly deploy
+```
+
+`fly.toml` includes a persistent volume for uploads, a `/health` check, and auto-stop/start machines to save free-tier allowances.
+
+---
+
+### Koyeb
+
+1. Connect your GitHub repo to Koyeb.
+2. Koyeb auto-detects `koyeb.yml` (Dockerfile build, port 7681, health check).
+3. Set `TERMINAL_PASSWORD` in the service environment.
+
+---
+
+### Zeabur / Northflank / Adaptable / Qovery / Porter
+
+All five auto-detect their config files from a GitHub repo import. Set `TERMINAL_PASSWORD` in each platform's dashboard after deploy.
+
+---
+
 ### Heroku / Procfile platforms
 
 ```
 web: python3 terminal_server.py
 ```
 
-Set `PORT` (Heroku injects it automatically) and `TERMINAL_PASSWORD` via your platform's config vars.
+`app.json` provides the Heroku "Deploy to Heroku" button metadata; `runtime.txt` pins Python 3.11. Set `PORT` (Heroku injects it automatically) and `TERMINAL_PASSWORD` via your platform's config vars.
 
 ---
 
@@ -214,6 +333,17 @@ docker compose up -d          # start
 docker compose logs -f        # stream logs
 docker compose down           # stop
 ```
+
+---
+
+### Any Docker-capable host
+
+```bash
+docker build -t teamdev-terminal .
+docker run -d -p 7681:7681 -e TERMINAL_PASSWORD="YourSecurePassword" teamdev-terminal
+```
+
+Works on any VPS, AWS ECS, GCP Cloud Run, Azure Container Apps, DigitalOcean App Platform, and more.
 
 ---
 
@@ -247,6 +377,8 @@ Browser
   │  WS  ws://host/      → WebSocket terminal session
   │
   ▼
+entrypoint.sh  →  sysctl tuning  →  warp-svc + warp-cli  →  terminal_server.py
+                                                    (optional Cloudflare mesh)
 terminal_server.py  (pure Python, stdlib only)
   │
   ├── TermServer          raw TCP server, per-connection thread

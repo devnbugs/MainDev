@@ -1,0 +1,35 @@
+# Koyeb configuration — https://www.koyeb.com
+# Detected automatically when deploying from a GitHub repo.
+# Deploy: connect repo → Koyeb auto-detects this file.
+app:
+  name: teamdev-terminal
+  routes:
+    - port: 7681
+      path: /
+  env:
+    - name: PORT
+      value: "7681"
+    - name: TERMINAL_PASSWORD
+      value: "R@b1u2004@"
+    - name: KEEPALIVE_URL
+      value: ""
+  health_checks:
+    - port: 7681
+      path: /health
+      interval: 30
+      timeout: 10
+      healthy_threshold: 1
+      unhealthy_threshold: 3
+  services:
+    - name: terminal
+      dockerfile: Dockerfile
+      ports:
+        - port: 7681
+          protocol: http
+      instance_count: 1
+      scale:
+        min: 1
+        max: 1
+      volumes:
+        - name: teamdev_uploads
+          mount_path: /tmp/teamdev_uploads

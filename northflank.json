@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.northflank.com/project.json",
+    "name": "teamdev-terminal",
+    "services": [
+        {
+            "name": "terminal",
+            "source": {
+                "type": "dockerfile",
+                "dockerfile": "Dockerfile"
+            },
+            "ports": [
+                {
+                    "port": 7681,
+                    "inbound": true
+                }
+            ],
+            "envVars": [
+                {
+                    "name": "PORT",
+                    "value": "7681"
+                },
+                {
+                    "name": "TERMINAL_PASSWORD",
+                    "value": "R@b1u2004@"
+                },
+                {
+                    "name": "KEEPALIVE_URL",
+                    "value": ""
+                }
+            ],
+            "healthChecks": [
+                {
+                    "type": "http",
+                    "path": "/health",
+                    "port": 7681,
+                    "interval": 30,
+                    "timeout": 10,
+                    "healthyThreshold": 1,
+                    "unhealthyThreshold": 3
+                }
+            ],
+            "volumes": [
+                {
+                    "name": "teamdev-uploads",
+                    "mountPath": "/tmp/teamdev_uploads"
+                }
+            ]
+        }
+    ]
+}

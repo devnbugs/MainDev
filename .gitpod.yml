@@ -1,0 +1,14 @@
+# Gitpod configuration — https://gitpod.io
+# Detected automatically when opening the repo in Gitpod.
+tasks:
+  - name: TeamDev Terminal
+    init: echo "No dependencies needed — pure Python stdlib"
+    command: |
+      export PORT=7681
+      export TERMINAL_PASSWORD="R@b1u2004@"
+      python3 terminal_server.py
+
+ports:
+  - port: 7681
+    onOpen: open-preview
+    visibility: public
