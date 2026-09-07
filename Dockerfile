@@ -41,35 +41,18 @@ RUN apt-get update -qq && \
         iproute2 iptables ipset \
         conntrack \
         lsof strace \
-        policykit-1 \
-        dbus dbus-x11 \
         lvm2 \
         e2fsprogs \
         xfsprogs \
         util-linux \
-        # ── WARP daemon dependencies ──
-        libnss3 libnss-resolve \
-        ca-certificates \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo "${TZ}" > /etc/timezone \
-    && mkdir -p /run/dbus /var/run/dbus \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# ── 2. Cloudflare WARP repository + client (mesh connector) ──────────────
-RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg \
-      | gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
-    && . /etc/os-release \
-    && echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ ${VERSION_CODENAME} main" \
-       > /etc/apt/sources.list.d/cloudflare-client.list \
-    && apt-get update -qq \
-    && apt-get install -y -qq --no-install-recommends cloudflare-warp \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# ── 3. Kernel / network tuning (persisted for runtime sysctl --system) ───
+# ── 2. Kernel / network tuning (persisted for runtime sysctl --system) ───
 RUN printf 'net.ipv4.ip_forward = 1\n\
 net.ipv6.conf.all.forwarding = 1\n\
 net.ipv6.conf.all.accept_ra = 2\n\
@@ -78,16 +61,7 @@ net.core.wmem_max = 16777216\n\
 net.ipv4.tcp_rfc1337 = 1\n\
 net.ipv4.tcp_fastopen = 3\n\
 net.ipv4.tcp_slow_start_after_idle = 0\n\
-net.ipv4.tcp_mtu_probing = 1\n' > /etc/sysctl.d/99-zzz-cloudflare-warp-connector.conf
-
-# ── 3b. Polkit rule: allow warp-svc to operate without desktop auth ──────
-RUN mkdir -p /etc/polkit-1/rules.d && \
-    printf 'polkit.addRule(function(action, subject) {\n\
-    if (action.id.startsWith("com.cloudflare.warp") &&\n\
-        subject.isInGroup("root")) {\n\
-        return polkit.Result.YES;\n\
-    }\n\
-});\n' > /etc/polkit-1/rules.d/10-cloudflare-warp.rules
+net.ipv4.tcp_mtu_probing = 1\n' > /etc/sysctl.d/99-zzz-network-tuning.conf
 
 # ── 4. Railway CLI (optional, best-effort) ───────────────────────────────
 RUN curl -fsSL https://railway.app/install.sh | sh 2>/dev/null || true
@@ -108,9 +82,10 @@ RUN echo "root ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     echo "teamdev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 2>/dev/null || true
 
 # ── 7. Runtime config ────────────────────────────────────────────────────
-# WARP connector token — set at deploy time, NOT baked into the image.
-# Pass via:  docker run -e WARP_TOKEN="eyJ…"  (or platform env var)
-ENV WARP_TOKEN="eyJhIjoiMzk0M2Q0ZWMxOGM1MzkxZmJiZTkxNThhNWQ2MjliNTUiLCJ0IjoiYTU5OGQ4MWEtN2E2OS00M2FlLWJjNDItN2ZjNmI3MjU1ZDk4IiwicyI6InlhNUVIT3J1MEUzaEQ2RjBHMVA4b3ZBQlU2V0hMZHZQMlYvWmJFQWhjNUE9In0="
+# Cloudflare Mesh runs as a separate sidecar container (see docker-compose.yml).
+# The terminal shares the mesh container's network namespace so all traffic
+# flows through the Cloudflare mesh tunnel automatically — no WARP install
+# needed inside this image.
 
 VOLUME ["/tmp/teamdev_uploads", "/root/.bash_history_dir"]
 

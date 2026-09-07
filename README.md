@@ -169,7 +169,7 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 | `TERMINAL_PASSWORD` | `R@b1u2004@`         | Password required to access the terminal UI                                 |
 | `KEEPALIVE_URL`     | *(empty)*            | If set, the server pings `<KEEPALIVE_URL>/health` every 25 s to prevent idle spin-down on free-tier hosts |
 | `SHELL`             | `/bin/bash`          | Shell binary to spawn for PTY sessions                                      |
-| `WARP_TOKEN`        | *(empty)*            | Cloudflare WARP connector token (base64 JSON). When set, the entrypoint starts `warp-svc`, registers the connector, and joins the Cloudflare mesh before launching the terminal. Requires `--privileged` or `cap_add: [NET_ADMIN, SYS_ADMIN]` at runtime. |
+| `MESH_NODE_TOKEN`   | *(empty)*            | Cloudflare Mesh node token. Used by the `cloudflare/mesh` sidecar container in `docker-compose.yml`. Create a node in Cloudflare Dashboard → Networking → Mesh. |
 
 ### `.env.example`
 
@@ -177,46 +177,68 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 PORT=7681
 TERMINAL_PASSWORD=R@b1u2004@
 KEEPALIVE_URL=https://your-app.onrender.com
-WARP_TOKEN=          # optional Cloudflare WARP connector token
+MESH_NODE_TOKEN=      # optional Cloudflare Mesh node token
 ```
 
 > **Important:** Always change `TERMINAL_PASSWORD` before deploying to a public-facing host.
 
 ---
 
-## ☁️ Cloudflare WARP Mesh (optional)
+## ☁️ Cloudflare Mesh (optional)
 
-The Docker image ships with the **Cloudflare WARP** client pre-installed. When you provide a `WARP_TOKEN`, the [`entrypoint.sh`](entrypoint.sh) script:
+The project uses Cloudflare's official **`cloudflare/mesh:latest`** Docker image as a sidecar container. The terminal shares the mesh container's network namespace, so all traffic flows through the Cloudflare mesh tunnel automatically — no WARP install needed inside the terminal image.
 
-1. Applies kernel forwarding sysctls (`ip_forward`, IPv6 forwarding, `accept_ra`)
-2. Starts the `warp-svc` daemon in the background
-3. Registers the connector with your token (`warp-cli connector new`)
-4. Connects to the Cloudflare mesh (`warp-cli connect`)
-5. Waits for `Connected` status, then launches the terminal server
-
-### Deploy with WARP
+### Deploy with Mesh (Docker Compose)
 
 ```bash
+# Set your mesh node token
+export MESH_NODE_TOKEN="eyJhIjoi…"
+
+# Start both containers
+docker compose up -d
+```
+
+The `docker-compose.yml` runs two services:
+- **`cloudflare-mesh`** — official `cloudflare/mesh:latest` image with `NET_ADMIN`, `NET_RAW`, `/dev/net/tun`, and `MESH_NODE_TOKEN`
+- **`terminal`** — TeamDev terminal using `network_mode: service:cloudflare-mesh` to share the mesh's network namespace
+
+### Deploy with Mesh (Docker CLI)
+
+```bash
+# Start the mesh sidecar
 docker run -d \
-  -p 7681:7681 \
-  --privileged \
+  --name cloudflare-mesh \
+  --cap-add NET_ADMIN --cap-add NET_RAW \
+  --device /dev/net/tun:/dev/net/tun \
+  --sysctl net.ipv4.ip_forward=1 \
+  --sysctl net.ipv6.conf.all.forwarding=1 \
+  -e MESH_NODE_TOKEN="eyJhIjoi…" \
+  -v mesh_data:/var/lib/cloudflare-warp \
+  --restart unless-stopped \
+  cloudflare/mesh:latest
+
+# Start the terminal sharing the mesh network
+docker run -d \
+  --network container:cloudflare-mesh \
   -e TERMINAL_PASSWORD="YourSecurePassword" \
-  -e WARP_TOKEN="eyJhIjoi…" \
+  -e PORT=7681 \
+  -p 7681:7681 \
   --name teamdev-terminal \
   teamdev/terminal:latest
 ```
 
-> **Why `--privileged`?** The WARP connector creates a WireGuard tunnel and modifies routing tables, which requires `NET_ADMIN` + `SYS_ADMIN` capabilities. For tighter security, replace `--privileged` with `--cap-add=NET_ADMIN --cap-add=SYS_ADMIN --cap-add=NET_RAW`.
+### Without Mesh
 
-### Without WARP
+Leave `MESH_NODE_TOKEN` empty and run only the terminal service — no mesh, no extra capabilities needed.
 
-Leave `WARP_TOKEN` empty (the default) and the container starts the terminal normally — no mesh, no extra capabilities needed.
+### Getting a Mesh node token
 
-### Getting a connector token
+1. Go to **Cloudflare Dashboard → Networking → Mesh**.
+2. Click **Add a node**, enter a name, and click **Create node**.
+3. Copy the token shown in the dashboard.
+4. Pass it as the `MESH_NODE_TOKEN` environment variable.
 
-1. Go to **Cloudflare Zero Trust → Networks → Tunnels → Connectors**.
-2. Create a new connector and copy the base64 token.
-3. Pass it as the `WARP_TOKEN` environment variable.
+> 📖 **Docs:** [Run Cloudflare Mesh in containers](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-mesh/containers/)
 
 ---
 

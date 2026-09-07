@@ -8,10 +8,25 @@
     }
   ],
   "routes": [
-    { "src": "/health", "dest": "/terminal_server.py" },
-    { "src": "/manifest.json", "dest": "/terminal_server.py" },
-    { "src": "/upload", "dest": "/terminal_server.py", "methods": ["POST"] },
-    { "src": "/(.*)", "dest": "/terminal_server.py" }
+    {
+      "src": "/health",
+      "dest": "/terminal_server.py"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/terminal_server.py"
+    },
+    {
+      "src": "/upload",
+      "dest": "/terminal_server.py",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/terminal_server.py"
+    }
   ],
   "env": {
     "PORT": "7681",

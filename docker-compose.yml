@@ -2,6 +2,33 @@ version: '3.9'
 
 services:
 
+  # ── Cloudflare Mesh sidecar (official image) ────────────────────────────
+  #  Runs warp-svc headlessly in a minimal Wolfi-based container.
+  #  Shares the network namespace with the terminal service via
+  #  `network_mode: service:cloudflare-mesh` below.
+  #  Docs: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-mesh/containers/
+  cloudflare-mesh:
+    image: cloudflare/mesh:latest
+    container_name: cloudflare-mesh
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      MESH_NODE_TOKEN: "${MESH_NODE_TOKEN:-}"
+      SRCNAT_ENABLED: "true"
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+    volumes:
+      - mesh_data:/var/lib/cloudflare-warp
+    restart: unless-stopped
+
+  # ── TeamDev Terminal ───────────────────────────────────────────────────
+  #  Shares the mesh container's network namespace so all terminal traffic
+  #  flows through the Cloudflare mesh tunnel.
   terminal:
     build:
       context: .
@@ -9,30 +36,17 @@ services:
     container_name: TeamDevXTerminal
     image: teamdev/terminal:latest
     restart: always
+    network_mode: "service:cloudflare-mesh"
     ports:
       - "${PORT:-7681}:${PORT:-7681}"
     environment:
       - PORT=${PORT:-7681}
       - KEEPALIVE_URL=${KEEPALIVE_URL:-}
-      - WARP_TOKEN=${WARP_TOKEN:-}
       - TERM=xterm-256color
       - LANG=en_US.UTF-8
-    # ── Cloudflare WARP connector needs these capabilities ──
-    #    privileged: true is the simplest; for tighter security use the
-    #    cap_add + sysctls block below instead.
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-      - NET_RAW
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv6.conf.all.forwarding=1
-      - net.ipv6.conf.all.accept_ra=2
     volumes:
       - uploads:/tmp/teamdev_uploads
       - bash_history:/root/.bash_history_dir
-      - warp_state:/var/lib/cloudflare-warp
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-7681}/health"]
       interval: 30s
@@ -53,7 +67,7 @@ volumes:
     driver: local
   bash_history:
     driver: local
-  warp_state:
+  mesh_data:
     driver: local
 
 networks:
