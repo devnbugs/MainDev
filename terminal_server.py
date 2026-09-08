@@ -6,7 +6,7 @@ import struct as _struct
 import socket as _sock_mod
 from pathlib import Path
 
-PORT          = int(os.environ.get("PORT", 7681))
+PORT          = int(os.environ.get("PORT", 8080))
 HOST          = "0.0.0.0"
 UPLOAD_DIR    = Path("/tmp/teamdev_uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)

@@ -120,7 +120,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Open **http://localhost:7681** in your browser.
+Open **http://localhost:8080** in your browser.
 
 ---
 
@@ -130,9 +130,9 @@ Open **http://localhost:7681** in your browser.
 docker build -t teamdev-terminal .
 
 docker run -d \
-  -p 7681:7681 \
+  -p 8080:8080 \
   -e TERMINAL_PASSWORD="YourSecurePassword" \
-  -e PORT=7681 \
+  -e PORT=8080 \
   --name teamdev-terminal \
   teamdev-terminal
 ```
@@ -149,13 +149,13 @@ cd TeamDev-Terminal
 # Set your password
 export TERMINAL_PASSWORD="YourSecurePassword"
 
-# Optionally set the port (default: 7681)
-export PORT=7681
+# Optionally set the port (default: 8080)
+export PORT=8080
 
 python3 terminal_server.py
 ```
 
-Open **http://localhost:7681** in your browser.
+Open **http://localhost:8080** in your browser.
 
 ---
 
@@ -165,7 +165,7 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 
 | Variable            | Default              | Description                                                                 |
 |---------------------|----------------------|-----------------------------------------------------------------------------|
-| `PORT`              | `7681`               | TCP port the server listens on                                              |
+| `PORT`              | `8080`               | TCP port the server listens on                                              |
 | `TERMINAL_PASSWORD` | `R@b1u2004@`         | Password required to access the terminal UI                                 |
 | `KEEPALIVE_URL`     | *(empty)*            | If set, the server pings `<KEEPALIVE_URL>/health` every 25 s to prevent idle spin-down on free-tier hosts |
 | `SHELL`             | `/bin/bash`          | Shell binary to spawn for PTY sessions                                      |
@@ -174,7 +174,7 @@ All configuration is done via environment variables. Copy `.env.example` to `.en
 ### `.env.example`
 
 ```dotenv
-PORT=7681
+PORT=8080
 TERMINAL_PASSWORD=R@b1u2004@
 KEEPALIVE_URL=https://your-app.onrender.com
 TUNNEL_TOKEN=         # optional Cloudflare Tunnel token
@@ -204,8 +204,8 @@ docker compose up -d
 docker run -d \
   -e TERMINAL_PASSWORD="YourSecurePassword" \
   -e TUNNEL_TOKEN="eyJhIjoi…" \
-  -e PORT=7681 \
-  -p 7681:7681 \
+  -e PORT=8080 \
+  -p 8080:8080 \
   --name teamdev-terminal \
   teamdev/terminal:latest
 ```
@@ -218,7 +218,7 @@ Leave `TUNNEL_TOKEN` empty and run only the terminal service — no tunnel, no e
 
 1. Go to **Cloudflare Zero Trust → Networks → Tunnels**.
 2. Click **Add a tunnel**, select **Cloudflared**, and create it.
-3. Under **Configure**, add a public hostname (e.g. `terminal.yourdomain.com`) pointing to `http://localhost:7681`.
+3. Under **Configure**, add a public hostname (e.g. `terminal.yourdomain.com`) pointing to `http://localhost:8080`.
 4. Copy the **Install connector** token.
 5. Pass it as the `TUNNEL_TOKEN` environment variable.
 
@@ -306,7 +306,7 @@ fly deploy
 ### Koyeb
 
 1. Connect your GitHub repo to Koyeb.
-2. Koyeb auto-detects `koyeb.yml` (Dockerfile build, port 7681, health check).
+2. Koyeb auto-detects `koyeb.yml` (Dockerfile build, port 8080, health check).
 3. Set `TERMINAL_PASSWORD` in the service environment.
 
 ---
@@ -348,7 +348,7 @@ docker compose down           # stop
 
 ```bash
 docker build -t teamdev-terminal .
-docker run -d -p 7681:7681 -e TERMINAL_PASSWORD="YourSecurePassword" teamdev-terminal
+docker run -d -p 8080:8080 -e TERMINAL_PASSWORD="YourSecurePassword" teamdev-terminal
 ```
 
 Works on any VPS, AWS ECS, GCP Cloud Run, Azure Container Apps, DigitalOcean App Platform, and more.
@@ -393,7 +393,7 @@ Works on any VPS, AWS ECS, GCP Cloud Run, Azure Container Apps, DigitalOcean App
 
 - [ ] Change `TERMINAL_PASSWORD` to a strong, unique value
 - [ ] Enable HTTPS via a reverse proxy or cloud platform
-- [ ] Restrict port 7681 at the firewall / security group level
+- [ ] Restrict port 8080 at the firewall / security group level
 - [ ] Review and harden `sudoers` if deploying for untrusted users
 
 ---

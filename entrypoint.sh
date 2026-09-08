@@ -53,5 +53,5 @@ else
 fi
 
 # ── 3. Exec the terminal server (PID 1) ────────────────────────────────────
-log "starting terminal_server.py on port ${PORT:-7681}…"
+log "starting terminal_server.py on port ${PORT:-8080}…"
 exec python3 terminal_server.py

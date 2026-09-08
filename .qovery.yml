@@ -5,11 +5,11 @@ application:
   build:
     dockerfile_path: Dockerfile
   environment:
-    - PORT=7681
+    - PORT=8080
     - TERMINAL_PASSWORD=R@b1u2004@
     - KEEPALIVE_URL=
   healthchecks:
-    - port: 7681
+    - port: 8080
       path: /health
       interval: 30
       timeout: 10

@@ -4,11 +4,11 @@ tasks:
   - name: TeamDev Terminal
     init: echo "No dependencies needed — pure Python stdlib"
     command: |
-      export PORT=7681
+      export PORT=8080
       export TERMINAL_PASSWORD="R@b1u2004@"
       python3 terminal_server.py
 
 ports:
-  - port: 7681
+  - port: 8080
     onOpen: open-preview
     visibility: public

@@ -2,7 +2,7 @@
     "name": "teamdev-terminal",
     "type": "python",
     "env": {
-        "PORT": "7681",
+        "PORT": "8080",
         "TERMINAL_PASSWORD": "R@b1u2004@",
         "KEEPALIVE_URL": ""
     },

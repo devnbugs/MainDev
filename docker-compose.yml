@@ -13,9 +13,9 @@ services:
     image: teamdev/terminal:latest
     restart: always
     ports:
-      - "${PORT:-7681}:${PORT:-7681}"
+      - "${PORT:-8080}:${PORT:-8080}"
     environment:
-      - PORT=${PORT:-7681}
+      - PORT=${PORT:-8080}
       - TERMINAL_PASSWORD=${TERMINAL_PASSWORD:-R@b1u2004@}
       - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
       - KEEPALIVE_URL=${KEEPALIVE_URL:-}
@@ -26,7 +26,7 @@ services:
       - bash_history:/root/.bash_history_dir
       - cloudflared_data:/root/.cloudflared
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-7681}/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
       interval: 30s
       timeout: 10s
       retries: 3

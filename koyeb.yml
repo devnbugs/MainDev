@@ -4,17 +4,17 @@
 app:
   name: teamdev-terminal
   routes:
-    - port: 7681
+    - port: 8080
       path: /
   env:
     - name: PORT
-      value: "7681"
+      value: "8080"
     - name: TERMINAL_PASSWORD
       value: "R@b1u2004@"
     - name: KEEPALIVE_URL
       value: ""
   health_checks:
-    - port: 7681
+    - port: 8080
       path: /health
       interval: 30
       timeout: 10
@@ -24,7 +24,7 @@ app:
     - name: terminal
       dockerfile: Dockerfile
       ports:
-        - port: 7681
+        - port: 8080
           protocol: http
       instance_count: 1
       scale:

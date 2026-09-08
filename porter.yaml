@@ -3,14 +3,14 @@
 name: teamdev-terminal
 type: dockerfile
 dockerfile: Dockerfile
-port: 7681
+port: 8080
 env:
-  PORT: "7681"
+  PORT: "8080"
   TERMINAL_PASSWORD: "R@b1u2004@"
   KEEPALIVE_URL: ""
 healthCheck:
   path: /health
-  port: 7681
+  port: 8080
   intervalSeconds: 30
   timeoutSeconds: 10
   retries: 3

@@ -74,7 +74,7 @@ terminal_server.py  (pure Python, stdlib only)
 ### Configuration (env vars)
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `PORT` | `7681` | Listen port |
+| `PORT` | `8080` | Listen port |
 | `TERMINAL_PASSWORD` | `R@b1u2004@` | Login password (injected into served HTML) |
 | `KEEPALIVE_URL` | *(empty)* | If set, pings `<url>/health` every 25 s to prevent spin-down |
 | `SHELL` | `/bin/bash` | Shell binary for PTY sessions |
@@ -167,11 +167,11 @@ The Docker image ships with the `cloudflared` binary pre-installed. When `TUNNEL
 | Platform | Config | Notes |
 |----------|--------|-------|
 | Docker Compose | `docker-compose.yml` | Volumes: `uploads`, `bash_history`; healthcheck `curl /health`; json-file logging 10 MB × 3 |
-| Docker | `Dockerfile` | `ubuntu:24.04` + dev toolchain; passwordless sudo; `PORT=7681` |
+| Docker | `Dockerfile` | `ubuntu:24.04` + dev toolchain; passwordless sudo; `PORT=8080` |
 | Railway | `railway.json` | Nixpacks builder, `python3 terminal_server.py`, health check |
 | Render | `render.yaml` | `PORT=10000`, `KEEPALIVE_URL` auto-wired to own hostname |
 | Fly.io | `fly.toml` | Volume mount, `/health` check, auto-stop machines |
-| Koyeb | `koyeb.yml` | Dockerfile build, port 7681, health check |
+| Koyeb | `koyeb.yml` | Dockerfile build, port 8080, health check |
 | Zeabur | `zeabur.json` | Dockerfile, health check |
 | Northflank | `northflank.json` | Dockerfile, health check, volume |
 | Adaptable | `adaptable.json` | Python type, health check |

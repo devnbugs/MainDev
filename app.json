@@ -15,7 +15,7 @@
     "env": {
         "PORT": {
             "description": "Port the server listens on",
-            "value": "7681"
+            "value": "8080"
         },
         "TERMINAL_PASSWORD": {
             "description": "Password required to access the terminal UI",

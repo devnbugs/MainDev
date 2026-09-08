@@ -10,14 +10,14 @@
             },
             "ports": [
                 {
-                    "port": 7681,
+                    "port": 8080,
                     "inbound": true
                 }
             ],
             "envVars": [
                 {
                     "name": "PORT",
-                    "value": "7681"
+                    "value": "8080"
                 },
                 {
                     "name": "TERMINAL_PASSWORD",
@@ -32,7 +32,7 @@
                 {
                     "type": "http",
                     "path": "/health",
-                    "port": 7681,
+                    "port": 8080,
                     "interval": 30,
                     "timeout": 10,
                     "healthyThreshold": 1,
