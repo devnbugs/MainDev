@@ -20,6 +20,43 @@ sysctl -q net.ipv4.ip_forward=1          2>/dev/null || warn "cannot set net.ipv
 sysctl -q net.ipv6.conf.all.forwarding=1  2>/dev/null || true
 sysctl -q net.ipv6.conf.all.accept_ra=2   2>/dev/null || true
 
+# ── 1b. Start D-Bus (required by systemd / systemctl) ─────────────────────
+if command -v dbus-daemon >/dev/null 2>&1; then
+  log "starting D-Bus system bus…"
+  mkdir -p /run/dbus
+  if [ ! -f /run/dbus/pid ]; then
+    dbus-daemon --system --fork 2>/dev/null || warn "dbus-daemon failed to start"
+  fi
+fi
+
+# ── 1c. Start systemd (best-effort, for systemctl support) ─────────────────
+#  In a container, systemd can't be PID 1 (python3 is).  We start it as a
+#  user process so `systemctl` commands work from the terminal.  This needs
+#  --privileged or --cap-add SYS_ADMIN at runtime for full functionality.
+if [ -x /lib/systemd/systemd ] || [ -x /usr/lib/systemd/systemd ]; then
+  SYSTEMD_BIN=$(command -v systemd 2>/dev/null || echo /lib/systemd/systemd)
+  log "starting systemd (best-effort, for systemctl support)…"
+  # Mount cgroup v2 if not already mounted (needs SYS_ADMIN)
+  if [ ! -f /sys/fs/cgroup/cgroup.controllers ] 2>/dev/null; then
+    mount -t cgroup2 none /sys/fs/cgroup 2>/dev/null || warn "cannot mount cgroup2 (needs SYS_ADMIN)"
+  fi
+  # Start systemd in user mode as a background process
+  nohup "$SYSTEMD_BIN" --user >/var/log/systemd.log 2>&1 &
+  SYSTEMD_PID=$!
+  sleep 2
+  if kill -0 "$SYSTEMD_PID" 2>/dev/null; then
+    log "✓ systemd started (PID $SYSTEMD_PID) — systemctl available"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/0/bus"
+    export XDG_RUNTIME_DIR="/run/user/0"
+    mkdir -p /run/user/0 2>/dev/null || true
+  else
+    warn "systemd exited early — systemctl may not work (needs --privileged or --cap-add SYS_ADMIN)"
+    warn "systemd log: $(tail -3 /var/log/systemd.log 2>/dev/null || echo 'no logs')"
+  fi
+else
+  warn "systemd binary not found — systemctl not available"
+fi
+
 # ── 2. Cloudflare Tunnel (cloudflared, best-effort) ────────────────────────
 TUNNEL_TOKEN="${TUNNEL_TOKEN:-}"
 

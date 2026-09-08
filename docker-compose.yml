@@ -12,6 +12,15 @@ services:
     container_name: TeamDevXTerminal
     image: teamdev/terminal:latest
     restart: always
+    # ── Capabilities for systemd / systemctl support ──
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    # ── cgroup mount needed by systemd ──
+    cgroup: host
+    tmpfs:
+      - /run
+      - /run/lock
     ports:
       - "${PORT:-8080}:${PORT:-8080}"
     environment:
@@ -25,6 +34,7 @@ services:
       - uploads:/tmp/teamdev_uploads
       - bash_history:/root/.bash_history_dir
       - cloudflared_data:/root/.cloudflared
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
       interval: 30s

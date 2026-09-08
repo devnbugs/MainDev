@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-LABEL maintainer="@MR_ARMAN_08"
+LABEL maintainer="Vortex"
 LABEL org.opencontainers.image.title="TeamDev X Terminal"
 LABEL org.opencontainers.image.description="TeamDev Terminal – Root + ubuntu + Cloudflare Tunnel"
 LABEL org.opencontainers.image.url="https://t.me/Team_X_Og"
@@ -69,6 +69,11 @@ RUN apt-get update -qq && \
         socat \
         rsync \
         man-db \
+        # ── systemd / systemctl support ──
+        systemd systemd-sysv \
+        libsystemd0 \
+        udev \
+        policykit-1 \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -108,7 +113,9 @@ COPY teamdev_terminal_ui.html   ./teamdev_terminal_ui.html
 
 RUN chmod +x entrypoint.sh \
     && mkdir -p /tmp/teamdev_uploads \
-    && chmod 777 /tmp/teamdev_uploads
+    && chmod 777 /tmp/teamdev_uploads \
+    && mkdir -p /run /run/lock /run/dbus \
+    && chmod 1777 /run /run/lock
 
 # ── 6. Sudoers (sandbox convenience) ─────────────────────────────────────
 RUN echo "root ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -119,13 +126,20 @@ RUN echo "root ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
 # Set TUNNEL_TOKEN at deploy time to start the tunnel.
 # If TUNNEL_TOKEN is empty, cloudflared is skipped — terminal works normally.
 #
+# systemd (systemctl) is started best-effort in the entrypoint.
+# For full systemd support, run with --privileged or:
+#   --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH
+#   -v /sys/fs/cgroup:/sys/fs/cgroup:ro
+#   -v /tmp:/tmp
+# Without these, systemctl still works for basic operations.
+#
 # NOTE: No VOLUME instruction — some platforms (Railway) reject it.
 #       Use platform-specific volume mounts instead:
 #       - Railway:  Railway Volumes (dashboard)
 #       - Fly.io:   fly.toml volumes
 #       - Docker:   docker-compose.yml volumes
 
-STOPSIGNAL SIGINT
+STOPSIGNAL SIGRTMIN+3
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
