@@ -45,6 +45,18 @@ RUN apt-get update -qq && \
         e2fsprogs \
         xfsprogs \
         util-linux \
+        # ── Auto-install build tool prerequisites ──
+        autoconf automake autotools-dev \
+        pkg-config cmake ninja-build \
+        libssl-dev libffi-dev \
+        libsqlite3-dev libpq-dev libmysqlclient-dev \
+        libreadline-dev libncursesw5-dev \
+        libbz2-dev liblzma-dev \
+        libxml2-dev libxslt1-dev \
+        zlib1g-dev libgdbm-dev \
+        libexpat1-dev \
+        # ── Version managers & runtime installers ──
+        unzip \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -75,6 +87,108 @@ RUN curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/downloa
 # ── 4. Railway CLI (optional, best-effort) ───────────────────────────────
 RUN curl -fsSL https://railway.app/install.sh | sh 2>/dev/null || true
 
+# ── 4b. Auto-install build tools (version managers & runtimes) ────────────
+#  These are installed on-demand via /usr/local/bin/install-tools.sh so the
+#  image stays small.  Users run `install-tools.sh` (or individual commands)
+#  from the terminal to get Node.js, Rust, Go, Deno, Bun, Java, etc.
+ENV NVM_DIR="/root/.nvm" \
+    NVM_VERSION="v0.40.1" \
+    GO_VERSION="1.23.0" \
+    RUSTUP_HOME="/root/.rustup" \
+    CARGO_HOME="/root/.cargo" \
+    DENO_VERSION="2.0.0" \
+    BUN_VERSION="1.1.30" \
+    PYENV_ROOT="/root/.pyenv"
+
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash && \
+    curl -fsSL https://raw.githubusercontent.com/pyenv/pyenv-installer/HEAD/bin/pyenv-installer | bash 2>/dev/null || true
+
+# Create the auto-install helper script
+RUN printf '#!/usr/bin/env bash\n\
+set -e\n\
+log() { echo "[install-tools] $*"; }\n\
+\n\
+# ── Node.js (via nvm) ──\n\
+install_node() {\n\
+  log "installing Node.js LTS via nvm…";\n\
+  . "$NVM_DIR/nvm.sh";\n\
+  nvm install --lts;\n\
+  nvm use --lts;\n\
+  log "✓ Node $(node -v) / npm $(npm -v)";\n\
+}\n\
+\n\
+# ── Rust (via rustup) ──\n\
+install_rust() {\n\
+  log "installing Rust via rustup…";\n\
+  curl -fsSL https://sh.rustup.rs | sh -s -- -y;\n\
+  source "$CARGO_HOME/env";\n\
+  log "✓ Rust $(rustc --version)";\n\
+}\n\
+\n\
+# ── Go ──\n\
+install_go() {\n\
+  log "installing Go ${GO_VERSION}…";\n\
+  curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz;\n\
+  export PATH="$PATH:/usr/local/go/bin";\n\
+  echo "export PATH=\$PATH:/usr/local/go/bin" >> /root/.bashrc;\n\
+  log "✓ Go $(go version)";\n\
+}\n\
+\n\
+# ── Deno ──\n\
+install_deno() {\n\
+  log "installing Deno…";\n\
+  curl -fsSL https://deno.land/install.sh | sh;\n\
+  echo "export PATH=\$PATH:/root/.deno/bin" >> /root/.bashrc;\n\
+  log "✓ Deno $(deno --version | head -1)";\n\
+}\n\
+\n\
+# ── Bun ──\n\
+install_bun() {\n\
+  log "installing Bun…";\n\
+  curl -fsSL https://bun.sh/install | bash;\n\
+  echo "export PATH=\$PATH:/root/.bun/bin" >> /root/.bashrc;\n\
+  log "✓ Bun $(bun --version)";\n\
+}\n\
+\n\
+# ── Java (via SDKMAN) ──\n\
+install_java() {\n\
+  log "installing Java via SDKMAN…";\n\
+  curl -fsSL "https://get.sdkman.io" | bash;\n\
+  source "/root/.sdkman/bin/sdkman-init.sh";\n\
+  sdk install java 17.0.13-tem;\n\
+  log "✓ Java $(java -version 2>&1 | head -1)";\n\
+}\n\
+\n\
+# ── Python versions (via pyenv) ──\n\
+install_python() {\n\
+  local ver="${1:-3.12.7}";\n\
+  log "installing Python $ver via pyenv…";\n\
+  export PATH="$PYENV_ROOT/bin:$PATH";\n\
+  eval "$(pyenv init -)";\n\
+  pyenv install "$ver";\n\
+  pyenv global "$ver";\n\
+  log "✓ Python $(python --version)";\n\
+}\n\
+\n\
+# ── All ──\n\
+install_all() {\n\
+  install_node; install_rust; install_go; install_deno; install_bun; install_java;\n\
+}\n\
+\n\
+# ── CLI ──\n\
+case "${1:-all}" in\n\
+  node)   install_node ;;\n\
+  rust)   install_rust ;;\n\
+  go)     install_go ;;\n\
+  deno)   install_deno ;;\n\
+  bun)    install_bun ;;\n\
+  java)   install_java ;;\n\
+  python) install_python "${2:-}" ;;\n\
+  all)    install_all ;;\n\
+  *) echo "Usage: install-tools.sh [node|rust|go|deno|bun|java|python [ver]|all]"; exit 1 ;;\n\
+esac\n' > /usr/local/bin/install-tools.sh && \
+    chmod +x /usr/local/bin/install-tools.sh
+
 # ── 5. App layer ─────────────────────────────────────────────────────────
 WORKDIR /app
 
@@ -89,6 +203,24 @@ RUN chmod +x entrypoint.sh \
 # ── 6. Sudoers (sandbox convenience) ─────────────────────────────────────
 RUN echo "root ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     echo "teamdev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 2>/dev/null || true
+
+# ── 6b. Shell profile (auto-install tool paths) ───────────────────────────
+RUN printf '\n\
+# ── Auto-install build tools ──\n\
+export NVM_DIR="/root/.nvm"\n\
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\
+export PYENV_ROOT="/root/.pyenv"\n\
+[ -d "$PYENV_ROOT/bin" ] && export PATH="$PYENV_ROOT/bin:$PATH"\n\
+[ -d "$PYENV_ROOT" ] && eval "$(pyenv init -)" 2>/dev/null\n\
+export RUSTUP_HOME="/root/.rustup"\n\
+export CARGO_HOME="/root/.cargo"\n\
+[ -d "$CARGO_HOME/bin" ] && export PATH="$CARGO_HOME/bin:$PATH"\n\
+[ -d "/usr/local/go/bin" ] && export PATH="$PATH:/usr/local/go/bin"\n\
+[ -d "/root/.deno/bin" ] && export PATH="$PATH:/root/.deno/bin"\n\
+[ -d "/root/.bun/bin" ] && export PATH="$PATH:/root/.bun/bin"\n\
+[ -s "/root/.sdkman/bin/sdkman-init.sh" ] && source "/root/.sdkman/bin/sdkman-init.sh"\n\
+# Run install-tools.sh to get Node, Rust, Go, Deno, Bun, Java, Python\n\
+' >> /root/.bashrc
 
 # ── 7. Runtime config ────────────────────────────────────────────────────
 # Cloudflare Tunnel runs in-image via the cloudflared binary.
