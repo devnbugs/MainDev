@@ -45,6 +45,30 @@ RUN apt-get update -qq && \
         e2fsprogs \
         xfsprogs \
         util-linux \
+        # ── Hardware / system info ──
+        pciutils \
+        usbutils \
+        dmidecode \
+        hwinfo \
+        # ── Compression ──
+        zstd \
+        lz4 \
+        # ── D-Bus (system message bus) ──
+        dbus dbus-x11 \
+        # ── Vulkan / GPU compute (best-effort, userspace) ──
+        mesa-vulkan-drivers \
+        vulkan-tools \
+        mesa-utils \
+        libgl1 \
+        libglx-mesa0 \
+        libegl1 \
+        libgbm1 \
+        # ── Misc suggested ──
+        psmisc \
+        netcat-openbsd \
+        socat \
+        rsync \
+        man-db \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
